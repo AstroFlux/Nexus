@@ -2,157 +2,113 @@
 <html lang="en">
 
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nexus by AstroFlux</title>
 
 <!-- PubNub -->
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.js"></script>
 
+<!-- 🔑 KEYS ONLY HERE (LINE 6–7 RULE) -->
 <script>
-/* =========================
-   🔑 KEYS (KEEP HERE)
-========================= */
-const PUBNUB_PUBLISH_KEY   = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
+const PUBNUB_PUBLISH_KEY = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
 const PUBNUB_SUBSCRIBE_KEY = "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751";
 </script>
 
 <style>
-/* =========================
-   CORE DESIGN SYSTEM
-========================= */
-:root{
-  --bg:#050508;
-  --panel:rgba(18,18,28,0.7);
-  --border:rgba(255,255,255,0.06);
-  --accent:#8a2be2;
-  --glow:rgba(138,43,226,0.35);
-  --text:#e8e8f0;
-  --muted:#6b6b88;
-  --radius:16px;
-}
-
-*{box-sizing:border-box;margin:0;padding:0}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 
 body{
-  font-family:system-ui,-apple-system,sans-serif;
-  background:radial-gradient(circle at top,#0a0a12,var(--bg));
-  color:var(--text);
+  background:#050508;
+  color:#e8e8f0;
   height:100vh;
 }
 
-/* =========================
-   SCREEN SYSTEM
-========================= */
-.screen{
-  display:none;
-  height:100%;
-  animation:fade .35s ease;
-}
-.screen.active{
-  display:flex;
-}
+/* screens */
+.screen{display:none;height:100vh}
+.screen.active{display:flex}
 
-@keyframes fade{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-/* =========================
-   LOGIN
-========================= */
+/* LOGIN */
 #join{
-  align-items:center;
-  justify-content:center;
   flex-direction:column;
-  padding:20px;
+  justify-content:center;
+  align-items:center;
 }
 
 .logo{
-  font-size:3.2rem;
+  font-size:3rem;
   font-weight:800;
-  letter-spacing:-2px;
 }
-.logo span{color:var(--accent)}
+.logo span{color:#8a2be2}
 
 .card{
-  width:100%;
-  max-width:380px;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:24px;
-  backdrop-filter:blur(14px);
+  width:320px;
+  padding:20px;
+  background:rgba(20,20,30,0.6);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  backdrop-filter:blur(12px);
 }
 
 input{
   width:100%;
-  margin-top:10px;
   padding:12px;
+  margin-top:10px;
   border-radius:10px;
-  border:1px solid var(--border);
+  border:1px solid rgba(255,255,255,0.08);
   background:#0b0b12;
   color:white;
-  outline:none;
-  transition:.2s;
-}
-input:focus{
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--glow);
-  transform:scale(1.02);
 }
 
 button{
   width:100%;
   margin-top:12px;
   padding:12px;
+  background:#8a2be2;
   border:none;
   border-radius:10px;
-  background:var(--accent);
   color:white;
-  font-weight:600;
   cursor:pointer;
   transition:.2s;
 }
 button:hover{
-  box-shadow:0 0 18px var(--glow);
-  transform:translateY(-1px);
+  transform:translateY(-2px);
+  box-shadow:0 0 20px rgba(138,43,226,0.4);
 }
 
-/* =========================
-   CHAT
-========================= */
+/* CHAT */
 #chat{
   flex-direction:column;
 }
 
 .header{
+  padding:12px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
   display:flex;
   justify-content:space-between;
-  padding:14px;
-  border-bottom:1px solid var(--border);
 }
 
 .room{
-  color:var(--accent);
+  color:#8a2be2;
   font-weight:700;
 }
 
 .messages{
   flex:1;
   overflow:auto;
-  padding:16px;
+  padding:12px;
   display:flex;
   flex-direction:column;
   gap:8px;
 }
 
+/* messages */
 .msg{
-  max-width:75%;
-  padding:10px 12px;
-  border-radius:14px;
-  background:var(--panel);
-  border:1px solid var(--border);
+  max-width:70%;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(30,30,40,0.7);
+  border:1px solid rgba(255,255,255,0.08);
   animation:pop .2s ease;
 }
 
@@ -163,30 +119,22 @@ button:hover{
 
 .msg.me{
   align-self:flex-end;
-  background:rgba(138,43,226,0.12);
-  border-color:rgba(138,43,226,0.3);
-}
-
-.msg .name{
-  font-size:.7rem;
-  opacity:.6;
+  background:rgba(138,43,226,0.15);
+  border:1px solid rgba(138,43,226,0.4);
 }
 
 .inputbar{
   display:flex;
+  padding:10px;
   gap:10px;
-  padding:12px;
-  border-top:1px solid var(--border);
+  border-top:1px solid rgba(255,255,255,0.08);
 }
 
 .inputbar input{
   flex:1;
 }
-
-.smallbtn{
-  width:60px;
-}
 </style>
+
 </head>
 
 <body>
@@ -213,17 +161,18 @@ button:hover{
 
   <div class="inputbar">
     <input id="msg" placeholder="message"/>
-    <button class="smallbtn" onclick="send()">→</button>
+    <button onclick="send()">→</button>
   </div>
 </div>
 
 <script>
-let pubnub, me="", room="";
+let pubnub;
+let me="";
+let room="";
 
 function join(){
   me=document.getElementById("name").value;
   room=document.getElementById("room").value;
-
   if(!me||!room)return;
 
   document.getElementById("join").classList.remove("active");
@@ -259,8 +208,8 @@ function send(){
 
 function add(n,t){
   let d=document.createElement("div");
-  d.className="msg "+(n===me?"me":"");
-  d.innerHTML=`<div class="name">${n}</div>${t}`;
+  d.className="msg"+(n===me?" me":"");
+  d.innerText=n+": "+t;
   document.getElementById("msgs").appendChild(d);
 }
 
