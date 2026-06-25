@@ -6,133 +6,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Nexus by AstroFlux</title>
 
-<!-- PubNub -->
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.js"></script>
 
-<!-- 🔑 KEYS ONLY HERE (LINE 6–7 RULE) -->
 <script>
 const PUBNUB_PUBLISH_KEY = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
 const PUBNUB_SUBSCRIBE_KEY = "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751";
 </script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-
-body{
-  background:#050508;
-  color:#e8e8f0;
-  height:100vh;
-}
-
-/* screens */
+body{margin:0;font-family:system-ui;background:#050508;color:#fff}
 .screen{display:none;height:100vh}
-.screen.active{display:flex}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
 
-/* LOGIN */
-#join{
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
+.card{background:#111;border:1px solid #222;padding:20px;border-radius:12px;width:300px}
 
-.logo{
-  font-size:3rem;
-  font-weight:800;
-}
-.logo span{color:#8a2be2}
+input,button{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:none}
 
-.card{
-  width:320px;
-  padding:20px;
-  background:rgba(20,20,30,0.6);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:16px;
-  backdrop-filter:blur(12px);
-}
+input{background:#0b0b12;color:white;border:1px solid #222}
 
-input{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.08);
-  background:#0b0b12;
-  color:white;
-}
+button{background:#8a2be2;color:white;cursor:pointer}
 
-button{
-  width:100%;
-  margin-top:12px;
-  padding:12px;
-  background:#8a2be2;
-  border:none;
-  border-radius:10px;
-  color:white;
-  cursor:pointer;
-  transition:.2s;
-}
-button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 0 20px rgba(138,43,226,0.4);
-}
-
-/* CHAT */
-#chat{
-  flex-direction:column;
-}
-
-.header{
-  padding:12px;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  display:flex;
-  justify-content:space-between;
-}
-
-.room{
-  color:#8a2be2;
-  font-weight:700;
-}
-
-.messages{
-  flex:1;
-  overflow:auto;
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-/* messages */
-.msg{
-  max-width:70%;
-  padding:10px;
-  border-radius:12px;
-  background:rgba(30,30,40,0.7);
-  border:1px solid rgba(255,255,255,0.08);
-  animation:pop .2s ease;
-}
-
-@keyframes pop{
-  from{transform:scale(.95);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
-
-.msg.me{
-  align-self:flex-end;
-  background:rgba(138,43,226,0.15);
-  border:1px solid rgba(138,43,226,0.4);
-}
-
-.inputbar{
-  display:flex;
-  padding:10px;
-  gap:10px;
-  border-top:1px solid rgba(255,255,255,0.08);
-}
-
-.inputbar input{
-  flex:1;
-}
+.chat{display:flex;flex-direction:column;height:100vh}
+.header{padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between}
+.messages{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.msg{padding:8px;border-radius:10px;background:#1a1a24;max-width:70%}
+.me{align-self:flex-end;background:#2a1450}
+.inputbar{display:flex;padding:10px;gap:10px;border-top:1px solid #222}
+.inputbar input{flex:1}
 </style>
 
 </head>
@@ -141,39 +41,43 @@ button:hover{
 
 <!-- JOIN -->
 <div id="join" class="screen active">
-  <div class="logo">Ne<span>/</span>xus</div>
-
   <div class="card">
+    <h2>Nexus</h2>
     <input id="name" placeholder="username"/>
     <input id="room" placeholder="room code"/>
-    <button onclick="join()">Join</button>
+    <button onclick="join()">Join Room</button>
   </div>
 </div>
 
 <!-- CHAT -->
-<div id="chat" class="screen">
+<div id="chat" class="screen chat">
   <div class="header">
-    <div class="room" id="roomLabel"></div>
+    <div id="roomLabel"></div>
     <button onclick="leave()">leave</button>
   </div>
 
-  <div class="messages" id="msgs"></div>
+  <div id="msgs" class="messages"></div>
 
   <div class="inputbar">
     <input id="msg" placeholder="message"/>
-    <button onclick="send()">→</button>
+    <button onclick="send()">Send</button>
   </div>
 </div>
 
 <script>
+
 let pubnub;
 let me="";
 let room="";
 
 function join(){
-  me=document.getElementById("name").value;
-  room=document.getElementById("room").value;
-  if(!me||!room)return;
+  me=document.getElementById("name").value.trim();
+  room=document.getElementById("room").value.trim();
+
+  if(!me||!room){
+    alert("enter name + room");
+    return;
+  }
 
   document.getElementById("join").classList.remove("active");
   document.getElementById("chat").classList.add("active");
@@ -181,14 +85,14 @@ function join(){
   document.getElementById("roomLabel").innerText="#"+room;
 
   pubnub=new PubNub({
-    publishKey:pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57,
-    subscribeKey:sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751,
+    publishKey:PUBNUB_PUBLISH_KEY,
+    subscribeKey:PUBNUB_SUBSCRIBE_KEY,
     uuid:me
   });
 
   pubnub.addListener({
     message:function(e){
-      add(e.message.sender,e.message.text);
+      addMsg(e.message.sender,e.message.text);
     }
   });
 
@@ -196,9 +100,10 @@ function join(){
 }
 
 function send(){
-  let t=document.getElementById("msg").value;
-  document.getElementById("msg").value="";
+  let t=document.getElementById("msg").value.trim();
   if(!t)return;
+
+  document.getElementById("msg").value="";
 
   pubnub.publish({
     channel:room,
@@ -206,7 +111,7 @@ function send(){
   });
 }
 
-function add(n,t){
+function addMsg(n,t){
   let d=document.createElement("div");
   d.className="msg"+(n===me?" me":"");
   d.innerText=n+": "+t;
@@ -216,6 +121,7 @@ function add(n,t){
 function leave(){
   location.reload();
 }
+
 </script>
 
 </body>
