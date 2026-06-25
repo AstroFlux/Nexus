@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!-- ============================================================
+     🔑 PASTE YOUR PUBNUB KEYS HERE — lines 6 and 7
+     Get them free at pubnub.com → Create App → Keyset
+     ============================================================ -->
+<script>
+  const PUBNUB_PUBLISH_KEY   = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
+  const PUBNUB_SUBSCRIBE_KEY = "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751";
+</script>
 <!--
 ╔══════════════════════════════════════════════════════════════════╗
 ║                         NEXUS CHAT                              ║
@@ -20,8 +28,8 @@
   STEP 2 — PASTE YOUR KEYS
   ─────────────────────────
   Search for the line that says:
-    publishKey:   "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57"
-    subscribeKey: "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751"
+    publishKey:   "PASTE_YOUR_PUBLISH_KEY_HERE"
+    subscribeKey: "PASTE_YOUR_SUBSCRIBE_KEY_HERE"
   Replace those placeholder strings with your actual keys.
 
   STEP 3 — OPEN LOCALLY
@@ -508,8 +516,7 @@
     // ─────────────────────────────────────────────────────────────
     // ⚙️  CONFIGURATION — paste your PubNub keys here
     // ─────────────────────────────────────────────────────────────
-    const PUBNUB_PUBLISH_KEY   = "PASTE_YOUR_PUBLISH_KEY_HERE";
-    const PUBNUB_SUBSCRIBE_KEY = "PASTE_YOUR_SUBSCRIBE_KEY_HERE";
+    // Keys are set at the very top of this file (lines 6-7)
     // ─────────────────────────────────────────────────────────────
 
 
