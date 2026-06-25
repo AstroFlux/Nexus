@@ -1,751 +1,273 @@
 <!DOCTYPE html>
-<!-- ============================================================
-     🔑 PASTE YOUR PUBNUB KEYS HERE — lines 6 and 7
-     Get them free at pubnub.com → Create App → Keyset
-     ============================================================ -->
-<script>
-  const PUBNUB_PUBLISH_KEY   = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
-  const PUBNUB_SUBSCRIBE_KEY = "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751";
-</script>
-<!--
-╔══════════════════════════════════════════════════════════════════╗
-║                         NEXUS CHAT                              ║
-║              Real-time messaging powered by PubNub              ║
-╚══════════════════════════════════════════════════════════════════╝
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  HOW TO RUN — READ THIS FIRST
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  STEP 1 — GET PUBNUB KEYS (free, takes 2 minutes)
-  ─────────────────────────────────────────────────
-  1. Go to https://www.pubnub.com and sign up for a free account
-  2. After login, click "Create New App" — name it "Nexus"
-  3. Click on your new app, then click "Keyset"
-  4. Copy your "Publish Key"  (looks like: pub-c-xxxxxxxx-...)
-  5. Copy your "Subscribe Key" (looks like: sub-c-xxxxxxxx-...)
-
-  STEP 2 — PASTE YOUR KEYS
-  ─────────────────────────
-  Search for the line that says:
-    publishKey:   "PASTE_YOUR_PUBLISH_KEY_HERE"
-    subscribeKey: "PASTE_YOUR_SUBSCRIBE_KEY_HERE"
-  Replace those placeholder strings with your actual keys.
-
-  STEP 3 — OPEN LOCALLY
-  ──────────────────────
-  Option A: Double-click index.html to open in your browser.
-  Option B: Use VS Code → right-click → "Open with Live Server"
-
-  STEP 4 — DEPLOY TO VERCEL (optional, free hosting)
-  ─────────────────────────────────────────────────────
-  1. Go to https://vercel.com and sign up
-  2. Click "Add New Project" → "Deploy from CLI" or drag-and-drop
-  3. Drag this single index.html file onto the Vercel deploy page
-  4. Done! You'll get a public URL to share with anyone.
-     Both users open the URL, enter the SAME room code, and chat.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
--->
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nexus</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nexus by AstroFlux</title>
 
-  <!-- PubNub SDK loaded from CDN — handles all the real-time magic -->
-  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.js"></script>
+<!-- PubNub -->
+<script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.js"></script>
 
-  <style>
-    /* ── Reset & base ───────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<script>
+/* =========================
+   🔑 KEYS (KEEP HERE)
+========================= */
+const PUBNUB_PUBLISH_KEY   = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
+const PUBNUB_SUBSCRIBE_KEY = "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751";
+</script>
 
-    :root {
-      --bg:        #050508;        /* obsidian black — the canvas */
-      --surface:   #0e0e14;        /* slightly lifted surface */
-      --border:    #1c1c2a;        /* subtle border */
-      --accent:    #8a2be2;        /* neon purple — the soul of Nexus */
-      --accent-dim:#5a1a9a;        /* darker purple for pressed/hover states */
-      --accent-glow: rgba(138,43,226,0.25);
-      --text:      #e8e8f0;        /* near-white body text */
-      --muted:     #6b6b88;        /* de-emphasised labels, timestamps */
-      --own-msg:   #130d1f;        /* tinted background for own messages */
-      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-      --font-ui:   'Inter', 'Segoe UI', system-ui, sans-serif;
-      --radius:    12px;
-      --radius-sm: 7px;
-    }
+<style>
+/* =========================
+   CORE DESIGN SYSTEM
+========================= */
+:root{
+  --bg:#050508;
+  --panel:rgba(18,18,28,0.7);
+  --border:rgba(255,255,255,0.06);
+  --accent:#8a2be2;
+  --glow:rgba(138,43,226,0.35);
+  --text:#e8e8f0;
+  --muted:#6b6b88;
+  --radius:16px;
+}
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 15px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
+*{box-sizing:border-box;margin:0;padding:0}
 
-    /* ── Screen management — only one visible at a time ────────── */
-    .screen { display: none; height: 100%; }
-    .screen.active { display: flex; }
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:radial-gradient(circle at top,#0a0a12,var(--bg));
+  color:var(--text);
+  height:100vh;
+}
 
-    /* ══════════════════════════════════════════════════════════════
-       JOIN SCREEN
-    ══════════════════════════════════════════════════════════════ */
-    #join-screen {
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      padding: 24px;
-    }
+/* =========================
+   SCREEN SYSTEM
+========================= */
+.screen{
+  display:none;
+  height:100%;
+  animation:fade .35s ease;
+}
+.screen.active{
+  display:flex;
+}
 
-    /* Wordmark */
-    .wordmark {
-      font-size: clamp(2.4rem, 8vw, 4rem);
-      font-weight: 800;
-      letter-spacing: -2px;
-      color: var(--text);
-      margin-bottom: 6px;
-      position: relative;
-    }
-    /* The purple slash — our one signature mark */
-    .wordmark span {
-      color: var(--accent);
-    }
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
-    .tagline {
-      color: var(--muted);
-      font-size: 0.875rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 48px;
-    }
+/* =========================
+   LOGIN
+========================= */
+#join{
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  padding:20px;
+}
 
-    /* Join card */
-    .join-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 36px 32px;
-      width: 100%;
-      max-width: 380px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+.logo{
+  font-size:3.2rem;
+  font-weight:800;
+  letter-spacing:-2px;
+}
+.logo span{color:var(--accent)}
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+.card{
+  width:100%;
+  max-width:380px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  backdrop-filter:blur(14px);
+}
 
-    .field label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
+input{
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#0b0b12;
+  color:white;
+  outline:none;
+  transition:.2s;
+}
+input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--glow);
+  transform:scale(1.02);
+}
 
-    .field input {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 11px 14px;
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .field input::placeholder { color: var(--muted); }
-    .field input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
+button{
+  width:100%;
+  margin-top:12px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:var(--accent);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s;
+}
+button:hover{
+  box-shadow:0 0 18px var(--glow);
+  transform:translateY(-1px);
+}
 
-    /* Join button */
-    .btn-join {
-      margin-top: 8px;
-      padding: 13px;
-      background: var(--accent);
-      border: none;
-      border-radius: var(--radius-sm);
-      color: #fff;
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .btn-join:hover  { background: #9d3ff5; }
-    .btn-join:active { background: var(--accent-dim); transform: scale(0.98); }
+/* =========================
+   CHAT
+========================= */
+#chat{
+  flex-direction:column;
+}
 
-    /* Error message on join screen */
-    .join-error {
-      font-size: 0.8rem;
-      color: #e05c7a;
-      text-align: center;
-      min-height: 18px;
-    }
+.header{
+  display:flex;
+  justify-content:space-between;
+  padding:14px;
+  border-bottom:1px solid var(--border);
+}
 
-    /* ══════════════════════════════════════════════════════════════
-       CHAT SCREEN
-    ══════════════════════════════════════════════════════════════ */
-    #chat-screen {
-      flex-direction: column;
-      max-width: 760px;
-      width: 100%;
-      margin: 0 auto;
-      height: 100%;
-    }
+.room{
+  color:var(--accent);
+  font-weight:700;
+}
 
-    /* Top bar */
-    .chat-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+.messages{
+  flex:1;
+  overflow:auto;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
-    .chat-header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+.msg{
+  max-width:75%;
+  padding:10px 12px;
+  border-radius:14px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  animation:pop .2s ease;
+}
 
-    /* Live dot — pulses to signal an active connection */
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #39e08a;
-      box-shadow: 0 0 0 0 rgba(57,224,138,0.5);
-      animation: pulse 2s infinite;
-      flex-shrink: 0;
-    }
-    @keyframes pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(57,224,138,0.5); }
-      70%  { box-shadow: 0 0 0 6px rgba(57,224,138,0); }
-      100% { box-shadow: 0 0 0 0 rgba(57,224,138,0); }
-    }
+@keyframes pop{
+  from{transform:scale(.95);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
 
-    .room-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .room-name {
-      font-weight: 700;
-      color: var(--accent);
-      font-size: 0.95rem;
-    }
+.msg.me{
+  align-self:flex-end;
+  background:rgba(138,43,226,0.12);
+  border-color:rgba(138,43,226,0.3);
+}
 
-    /* Leave button */
-    .btn-leave {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--muted);
-      font-family: var(--font-ui);
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-      text-transform: uppercase;
-    }
-    .btn-leave:hover { border-color: var(--muted); color: var(--text); }
+.msg .name{
+  font-size:.7rem;
+  opacity:.6;
+}
 
-    /* Message list — scrollable area */
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      scroll-behavior: smooth;
-    }
-    /* Custom thin scrollbar */
-    .messages::-webkit-scrollbar { width: 4px; }
-    .messages::-webkit-scrollbar-track { background: transparent; }
-    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.inputbar{
+  display:flex;
+  gap:10px;
+  padding:12px;
+  border-top:1px solid var(--border);
+}
 
-    /* Empty state */
-    .empty-state {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-    .empty-state .icon { font-size: 2rem; opacity: 0.4; }
+.inputbar input{
+  flex:1;
+}
 
-    /* ── Individual message bubble ─────────────────────────────── */
-    .message {
-      display: flex;
-      flex-direction: column;
-      max-width: 72%;
-      padding: 10px 14px;
-      border-radius: var(--radius);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      position: relative;
-      word-break: break-word;
-    }
-
-    /* Own messages float right with a purple tint */
-    .message.own {
-      align-self: flex-end;
-      background: var(--own-msg);
-      border-color: rgba(138,43,226,0.3);
-    }
-
-    /* Other users' messages float left */
-    .message.other {
-      align-self: flex-start;
-    }
-
-    /* System / info messages span the full width, centered */
-    .message.system {
-      align-self: center;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 0.78rem;
-      text-align: center;
-      padding: 4px 0;
-      max-width: 100%;
-    }
-
-    .message-meta {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 3px;
-    }
-
-    .message-author {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    /* Own messages label in accent purple */
-    .message.own .message-author { color: var(--accent); }
-    .message.other .message-author { color: #7ecfff; }
-
-    .message-time {
-      font-size: 0.68rem;
-      color: var(--muted);
-      font-family: var(--font-mono);
-    }
-
-    .message-text {
-      font-size: 0.93rem;
-      color: var(--text);
-    }
-
-    /* ── Input bar at the bottom ──────────────────────────────── */
-    .chat-input-bar {
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    #msg-input {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 11px 14px;
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.15s;
-      resize: none;
-    }
-    #msg-input::placeholder { color: var(--muted); }
-    #msg-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    /* Send button */
-    .btn-send {
-      width: 44px;
-      height: 44px;
-      background: var(--accent);
-      border: none;
-      border-radius: var(--radius-sm);
-      color: #fff;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s, transform 0.1s;
-      flex-shrink: 0;
-    }
-    .btn-send:hover  { background: #9d3ff5; }
-    .btn-send:active { background: var(--accent-dim); transform: scale(0.94); }
-    .btn-send svg { pointer-events: none; }
-
-    /* ── Responsive tweaks ────────────────────────────────────── */
-    @media (max-width: 480px) {
-      .join-card { padding: 28px 20px; }
-      .message   { max-width: 88%; }
-      .wordmark  { letter-spacing: -1px; }
-    }
-  </style>
+.smallbtn{
+  width:60px;
+}
+</style>
 </head>
+
 <body>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       SCREEN 1: JOIN
-       Users enter a username and a room code here.
-  ════════════════════════════════════════════════════════════ -->
-  <div id="join-screen" class="screen active">
+<!-- JOIN -->
+<div id="join" class="screen active">
+  <div class="logo">Ne<span>/</span>xus</div>
 
-    <!-- App name — the slash in "Ne/xus" is our signature purple mark -->
-    <h1 class="wordmark">Ne<span>/</span>xus</h1>
-    <p class="tagline">Real-time messaging</p>
+  <div class="card">
+    <input id="name" placeholder="username"/>
+    <input id="room" placeholder="room code"/>
+    <button onclick="join()">Join</button>
+  </div>
+</div>
 
-    <div class="join-card">
-
-      <div class="field">
-        <label for="username-input">Your name</label>
-        <input
-          id="username-input"
-          type="text"
-          placeholder="e.g. alex"
-          maxlength="24"
-          autocomplete="off"
-          spellcheck="false"
-        />
-      </div>
-
-      <div class="field">
-        <label for="room-input">Room code</label>
-        <input
-          id="room-input"
-          type="text"
-          placeholder="e.g. launch-party"
-          maxlength="40"
-          autocomplete="off"
-          spellcheck="false"
-        />
-      </div>
-
-      <p class="join-error" id="join-error"></p>
-
-      <button class="btn-join" id="join-btn">Join room →</button>
-
-    </div>
+<!-- CHAT -->
+<div id="chat" class="screen">
+  <div class="header">
+    <div class="room" id="roomLabel"></div>
+    <button onclick="leave()">leave</button>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       SCREEN 2: CHAT
-       Live message list + input bar shown after joining.
-  ════════════════════════════════════════════════════════════ -->
-  <div id="chat-screen" class="screen">
+  <div class="messages" id="msgs"></div>
 
-    <!-- Header bar with room info and a Leave button -->
-    <div class="chat-header">
-      <div class="chat-header-left">
-        <div class="live-dot" title="Connected"></div>
-        <div>
-          <div class="room-label">Room</div>
-          <div class="room-name" id="room-display"></div>
-        </div>
-      </div>
-      <button class="btn-leave" id="leave-btn">Leave</button>
-    </div>
-
-    <!-- Scrollable message list -->
-    <div class="messages" id="messages">
-      <!-- Messages are injected here by JavaScript -->
-      <div class="empty-state" id="empty-state">
-        <div class="icon">✦</div>
-        <div>No messages yet — say hello!</div>
-      </div>
-    </div>
-
-    <!-- Bottom input bar -->
-    <div class="chat-input-bar">
-      <input
-        id="msg-input"
-        type="text"
-        placeholder="Send a message…"
-        maxlength="500"
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <button class="btn-send" id="send-btn" title="Send">
-        <!-- Paper-plane icon -->
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"/>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-        </svg>
-      </button>
-    </div>
-
+  <div class="inputbar">
+    <input id="msg" placeholder="message"/>
+    <button class="smallbtn" onclick="send()">→</button>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       JAVASCRIPT — All app logic lives here
-  ════════════════════════════════════════════════════════════ -->
-  <script>
-    // ─────────────────────────────────────────────────────────────
-    // ⚙️  CONFIGURATION — paste your PubNub keys here
-    // ─────────────────────────────────────────────────────────────
-    // Keys are set at the very top of this file (lines 6-7)
-    // ─────────────────────────────────────────────────────────────
+<script>
+let pubnub, me="", room="";
 
+function join(){
+  me=document.getElementById("name").value;
+  room=document.getElementById("room").value;
 
-    // ── State ────────────────────────────────────────────────────
-    let pubnub   = null;   // PubNub instance, created after join
-    let myName   = "";     // the local user's chosen username
-    let myRoom   = "";     // the channel / room code
+  if(!me||!room)return;
 
+  document.getElementById("join").classList.remove("active");
+  document.getElementById("chat").classList.add("active");
 
-    // ── DOM references ───────────────────────────────────────────
-    const joinScreen    = document.getElementById("join-screen");
-    const chatScreen    = document.getElementById("chat-screen");
-    const usernameInput = document.getElementById("username-input");
-    const roomInput     = document.getElementById("room-input");
-    const joinBtn       = document.getElementById("join-btn");
-    const joinError     = document.getElementById("join-error");
-    const messagesEl    = document.getElementById("messages");
-    const emptyState    = document.getElementById("empty-state");
-    const msgInput      = document.getElementById("msg-input");
-    const sendBtn       = document.getElementById("send-btn");
-    const roomDisplay   = document.getElementById("room-display");
-    const leaveBtn      = document.getElementById("leave-btn");
+  document.getElementById("roomLabel").innerText="#"+room;
 
+  pubnub=new PubNub({
+    publishKey:pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57,
+    subscribeKey:sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751,
+    uuid:me
+  });
 
-    // ── JOIN LOGIC ───────────────────────────────────────────────
-
-    // Pressing Enter on either join-screen input triggers the join
-    [usernameInput, roomInput].forEach(el => {
-      el.addEventListener("keydown", e => {
-        if (e.key === "Enter") handleJoin();
-      });
-    });
-
-    joinBtn.addEventListener("click", handleJoin);
-
-    function handleJoin() {
-      // Trim whitespace so " alex " becomes "alex"
-      const name = usernameInput.value.trim();
-      const room = roomInput.value.trim();
-
-      // Basic validation — both fields are required
-      if (!name) { showJoinError("Please enter a username."); return; }
-      if (!room) { showJoinError("Please enter a room code."); return; }
-
-      // Warn if keys look like they haven't been replaced yet
-      if (
-        PUBNUB_PUBLISH_KEY.startsWith("PASTE") ||
-        PUBNUB_SUBSCRIBE_KEY.startsWith("PASTE")
-      ) {
-        showJoinError("Add your PubNub keys at the top of index.html first.");
-        return;
-      }
-
-      myName = name;
-      myRoom = room;
-      joinError.textContent = "";
-
-      // Switch to the chat screen
-      joinScreen.classList.remove("active");
-      chatScreen.classList.add("active");
-      roomDisplay.textContent = "#" + myRoom;
-
-      // Connect to PubNub
-      initPubNub();
+  pubnub.addListener({
+    message:function(e){
+      add(e.message.sender,e.message.text);
     }
+  });
 
-    function showJoinError(msg) {
-      joinError.textContent = msg;
-    }
+  pubnub.subscribe({channels:[room]});
+}
 
+function send(){
+  let t=document.getElementById("msg").value;
+  document.getElementById("msg").value="";
+  if(!t)return;
 
-    // ── PUBNUB SETUP ─────────────────────────────────────────────
+  pubnub.publish({
+    channel:room,
+    message:{sender:me,text:t}
+  });
+}
 
-    function initPubNub() {
-      // Create a PubNub client instance.
-      // Each user needs a unique UUID so PubNub can track presence.
-      pubnub = new PubNub({
-        publishKey:   PUBNUB_PUBLISH_KEY,
-        subscribeKey: PUBNUB_SUBSCRIBE_KEY,
-        uuid: myName + "_" + Math.random().toString(36).slice(2, 7)
-      });
+function add(n,t){
+  let d=document.createElement("div");
+  d.className="msg "+(n===me?"me":"");
+  d.innerHTML=`<div class="name">${n}</div>${t}`;
+  document.getElementById("msgs").appendChild(d);
+}
 
-      // Add a listener for incoming messages and connection events
-      pubnub.addListener({
+function leave(){
+  location.reload();
+}
+</script>
 
-        // Called whenever a new message arrives on our channel
-        message: function(event) {
-          const data = event.message;
-
-          // Decide if this message is from us or someone else
-          const isOwn = data.sender === myName;
-          appendMessage(data.sender, data.text, isOwn, false);
-        },
-
-        // Called when the PubNub connection status changes
-        status: function(event) {
-          if (event.category === "PNConnectedCategory") {
-            // Successfully connected — let the room know we arrived
-            appendSystemMessage(myName + " joined the room");
-          }
-          if (event.category === "PNNetworkIssuesCategory" ||
-              event.category === "PNNetworkDownCategory") {
-            appendSystemMessage("Connection lost — trying to reconnect…");
-          }
-        }
-      });
-
-      // Subscribe to the room channel.
-      // The room code becomes the PubNub channel name directly.
-      pubnub.subscribe({ channels: [myRoom] });
-
-      // Focus the message input so the user can type right away
-      msgInput.focus();
-    }
-
-
-    // ── SENDING MESSAGES ─────────────────────────────────────────
-
-    // Enter key sends; Shift+Enter is reserved for future multi-line use
-    msgInput.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    sendBtn.addEventListener("click", sendMessage);
-
-    function sendMessage() {
-      const text = msgInput.value.trim();
-      if (!text || !pubnub) return;
-
-      // Clear the input immediately so the user can keep typing
-      msgInput.value = "";
-
-      // Publish the message to PubNub.
-      // PubNub delivers it to everyone subscribed to this channel,
-      // including ourselves — so we don't manually add it to the UI here.
-      pubnub.publish({
-        channel: myRoom,
-        message: {
-          sender: myName,
-          text:   text
-        }
-      });
-    }
-
-
-    // ── RENDERING MESSAGES ───────────────────────────────────────
-
-    /**
-     * Appends a chat bubble to the message list.
-     * @param {string}  sender  — username
-     * @param {string}  text    — message body
-     * @param {boolean} isOwn   — true if sent by the local user
-     * @param {boolean} isSystem — true for status-only lines
-     */
-    function appendMessage(sender, text, isOwn, isSystem) {
-      // Remove the "No messages yet" placeholder on first message
-      if (emptyState) emptyState.remove();
-
-      const bubble = document.createElement("div");
-      bubble.className = "message " + (isSystem ? "system" : isOwn ? "own" : "other");
-
-      if (!isSystem) {
-        // Format a short HH:MM timestamp
-        const now  = new Date();
-        const time = now.getHours().toString().padStart(2,"0") + ":" +
-                     now.getMinutes().toString().padStart(2,"0");
-
-        bubble.innerHTML = `
-          <div class="message-meta">
-            <span class="message-author">${escapeHtml(sender)}</span>
-            <span class="message-time">${time}</span>
-          </div>
-          <div class="message-text">${escapeHtml(text)}</div>
-        `;
-      } else {
-        bubble.textContent = text;
-      }
-
-      messagesEl.appendChild(bubble);
-
-      // Auto-scroll to the newest message
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    function appendSystemMessage(text) {
-      appendMessage("", text, false, true);
-    }
-
-    /**
-     * Sanitise text before injecting into innerHTML.
-     * This prevents XSS — never skip this for user-supplied strings.
-     */
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-
-    // ── LEAVE ROOM ───────────────────────────────────────────────
-
-    leaveBtn.addEventListener("click", leaveRoom);
-
-    function leaveRoom() {
-      if (pubnub) {
-        // Unsubscribe cleanly before disconnecting
-        pubnub.unsubscribeAll();
-        pubnub = null;
-      }
-
-      // Clear the message list for the next session
-      messagesEl.innerHTML = `
-        <div class="empty-state" id="empty-state">
-          <div class="icon">✦</div>
-          <div>No messages yet — say hello!</div>
-        </div>
-      `;
-
-      // Switch back to the join screen
-      chatScreen.classList.remove("active");
-      joinScreen.classList.add("active");
-      usernameInput.focus();
-    }
-  </script>
 </body>
 </html>
