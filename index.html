@@ -7,536 +7,418 @@
   const PUBNUB_PUBLISH_KEY   = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
   const PUBNUB_SUBSCRIBE_KEY = "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751";
 </script>
-<!--
-╔══════════════════════════════════════════════════════════════════╗
-║                         NEXUS CHAT                              ║
-║              Real-time messaging powered by PubNub              ║
-╚══════════════════════════════════════════════════════════════════╝
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  HOW TO RUN — READ THIS FIRST
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  STEP 1 — GET PUBNUB KEYS (free, takes 2 minutes)
-  ─────────────────────────────────────────────────
-  1. Go to https://www.pubnub.com and sign up for a free account
-  2. After login, click "Create New App" — name it "Nexus"
-  3. Click on your new app, then click "Keyset"
-  4. Copy your "Publish Key"  (looks like: pub-c-xxxxxxxx-...)
-  5. Copy your "Subscribe Key" (looks like: sub-c-xxxxxxxx-...)
-
-  STEP 2 — PASTE YOUR KEYS
-  ─────────────────────────
-  Search for the line that says:
-    publishKey:   "PASTE_YOUR_PUBLISH_KEY_HERE"
-    subscribeKey: "PASTE_YOUR_SUBSCRIBE_KEY_HERE"
-  Replace those placeholder strings with your actual keys.
-
-  STEP 3 — OPEN LOCALLY
-  ──────────────────────
-  Option A: Double-click index.html to open in your browser.
-  Option B: Use VS Code → right-click → "Open with Live Server"
-
-  STEP 4 — DEPLOY TO VERCEL (optional, free hosting)
-  ─────────────────────────────────────────────────────
-  1. Go to https://vercel.com and sign up
-  2. Click "Add New Project" → "Deploy from CLI" or drag-and-drop
-  3. Drag this single index.html file onto the Vercel deploy page
-  4. Done! You'll get a public URL to share with anyone.
-     Both users open the URL, enter the SAME room code, and chat.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
--->
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nexus by AstroFlux</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Nexus by AstroFlux</title>
+<script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050508;
+  --glass:rgba(9,9,16,0.85);
+  --glass2:rgba(13,13,22,0.92);
+  --bd:rgba(138,43,226,0.22);
+  --bd2:rgba(255,255,255,0.055);
+  --ac:#8a2be2;
+  --ac2:#a855f7;
+  --ac3:#c084fc;
+  --glow:rgba(138,43,226,0.18);
+  --glow2:rgba(138,43,226,0.07);
+  --tx:#f2f2fa;
+  --tx2:#8888a8;
+  --mu:#3a3a52;
+  --green:#34d399;
+  --f:'Inter',system-ui,sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);-webkit-font-smoothing:antialiased;overflow:hidden}
 
-  <!-- PubNub SDK loaded from CDN — handles all the real-time magic -->
-  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+/* ── Canvas background ── */
+#cv{position:fixed;inset:0;z-index:0;pointer-events:none}
 
-  <style>
-    /* ── Reset & base ───────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Screens ── */
+.screen{display:none;height:100%;position:relative;z-index:2}
+.screen.active{display:flex}
 
-    :root {
-      --bg:          #050508;
-      --surface:     rgba(10,10,18,0.92);
-      --surface2:    rgba(16,16,28,0.96);
-      --border:      rgba(138,43,226,0.22);
-      --border-dim:  rgba(255,255,255,0.07);
-      --accent:      #8a2be2;
-      --accent-l:    #a855f7;
-      --accent-dim:  #5a1a9a;
-      --accent-glow: rgba(138,43,226,0.2);
-      --text:        #eeeef5;
-      --muted:       #55556e;
-      --own-msg:     rgba(138,43,226,0.12);
-      --font-mono:   'SF Mono', 'Fira Code', monospace;
-      --font-ui:     'Inter', system-ui, sans-serif;
-      --radius:      14px;
-      --radius-sm:   9px;
-    }
+/* ════════════════════════════════
+   JOIN SCREEN
+════════════════════════════════ */
+#join-screen{flex-direction:column;align-items:center;justify-content:center;padding:24px}
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 15px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      overflow: hidden;
-    }
+.join-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  opacity:0;transform:translateY(32px) scale(0.97);
+  animation:wrapIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s forwards;
+}
+@keyframes wrapIn{to{opacity:1;transform:none}}
 
-    /* Ambient purple glow at top */
-    body::before {
-      content: '';
-      position: fixed;
-      width: 900px; height: 500px;
-      top: -350px; left: 50%;
-      transform: translateX(-50%);
-      background: radial-gradient(ellipse, rgba(138,43,226,0.1) 0%, transparent 65%);
-      pointer-events: none;
-      z-index: 0;
-    }
+/* ── Wordmark ── */
+.wordmark{
+  font-size:clamp(4rem,12vw,7.5rem);
+  font-weight:900;
+  letter-spacing:-5px;
+  line-height:1;
+  color:var(--tx);
+  margin-bottom:6px;
+  position:relative;
+  user-select:none;
+}
+/* The slash — the whole identity */
+.wordmark .slash{
+  display:inline-block;
+  color:transparent;
+  background:linear-gradient(160deg,#c084fc 0%,#8a2be2 55%,#5b10b8 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  position:relative;
+  animation:slashGlow 3s ease-in-out infinite;
+}
+@keyframes slashGlow{
+  0%,100%{filter:drop-shadow(0 0 8px rgba(138,43,226,0.6))}
+  50%{filter:drop-shadow(0 0 22px rgba(168,85,247,1))}
+}
+.tagline{
+  font-size:0.65rem;font-weight:700;
+  letter-spacing:0.28em;text-transform:uppercase;
+  color:var(--mu);margin-bottom:56px;
+}
+.tagline b{color:var(--ac2);font-weight:700}
 
-    /* ── Screen management — only one visible at a time ────────── */
-    .screen { display: none; height: 100%; position: relative; z-index: 1; }
-    .screen.active { display: flex; animation: screenIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
-    @keyframes screenIn { from { opacity:0; transform:translateY(14px) scale(0.98); } to { opacity:1; transform:none; } }
+/* ── Card ── */
+.card{
+  width:100%;max-width:390px;
+  background:var(--glass);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border-radius:20px;
+  border:1px solid var(--bd);
+  padding:38px 34px 34px;
+  display:flex;flex-direction:column;gap:18px;
+  position:relative;overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(138,43,226,0.05),
+    0 40px 100px rgba(0,0,0,0.7),
+    0 -1px 0 rgba(168,85,247,0.12) inset;
+}
+/* top shimmer line */
+.card::before{
+  content:'';
+  position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(192,132,252,0.6),transparent);
+  border-radius:1px;
+}
+/* subtle inner glow */
+.card::after{
+  content:'';
+  position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:200px;height:120px;
+  background:radial-gradient(ellipse,rgba(138,43,226,0.08),transparent 70%);
+  pointer-events:none;
+}
 
-    /* ══════════════════════════════════════════════════════════════
-       JOIN SCREEN
-    ══════════════════════════════════════════════════════════════ */
-    #join-screen {
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      padding: 24px;
-    }
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{
+  font-size:0.67rem;font-weight:700;letter-spacing:0.16em;
+  text-transform:uppercase;color:var(--tx2);
+}
+.field input{
+  background:rgba(3,3,8,0.65);
+  border:1px solid var(--bd2);border-radius:8px;
+  padding:13px 15px;color:var(--tx);
+  font-family:var(--f);font-size:0.93rem;font-weight:500;
+  outline:none;width:100%;
+  transition:border-color 0.22s,box-shadow 0.25s,background 0.22s;
+}
+.field input::placeholder{color:var(--mu);font-weight:400}
+.field input:focus{
+  border-color:var(--ac);
+  background:rgba(138,43,226,0.045);
+  box-shadow:0 0 0 3px rgba(138,43,226,0.13),0 0 24px rgba(138,43,226,0.08);
+}
 
-    .wordmark {
-      font-size: clamp(2.4rem, 8vw, 3.8rem);
-      font-weight: 800;
-      letter-spacing: -2px;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-    .wordmark span {
-      background: linear-gradient(135deg, #a855f7, #8a2be2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+.btn-join{
+  position:relative;overflow:hidden;
+  margin-top:2px;padding:14px 20px;
+  background:linear-gradient(130deg,#6b1abf,#8a2be2,#a44cf0);
+  background-size:200% 100%;background-position:0% 50%;
+  border:none;border-radius:8px;
+  color:#fff;font-family:var(--f);font-size:0.91rem;font-weight:700;
+  letter-spacing:0.07em;cursor:pointer;
+  box-shadow:0 4px 32px rgba(138,43,226,0.5),0 1px 0 rgba(255,255,255,0.1) inset;
+  transition:transform 0.18s,box-shadow 0.22s,background-position 0.4s;
+}
+.btn-join:hover{
+  background-position:100% 50%;
+  transform:translateY(-2px);
+  box-shadow:0 12px 44px rgba(138,43,226,0.65),0 1px 0 rgba(255,255,255,0.15) inset;
+}
+.btn-join:active{transform:scale(0.96) translateY(0);box-shadow:0 2px 14px rgba(138,43,226,0.35)}
+/* ripple on click */
+.btn-join .rip{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,0.18);transform:scale(0);
+  animation:ripOut 0.55s ease forwards;pointer-events:none;
+}
+@keyframes ripOut{to{transform:scale(4);opacity:0}}
 
-    .tagline {
-      color: var(--muted);
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      margin-bottom: 48px;
-    }
-    .tagline span { color: var(--accent-l); }
+.err{font-size:0.75rem;font-weight:500;color:#f87171;text-align:center;min-height:14px}
 
-    .join-card {
-      background: var(--surface);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 36px 32px;
-      width: 100%;
-      max-width: 390px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      box-shadow: 0 0 0 1px rgba(138,43,226,0.07), 0 24px 60px rgba(0,0,0,0.55), 0 0 60px rgba(138,43,226,0.05) inset;
-    }
+/* ════════════════════════════════
+   CHAT SCREEN
+════════════════════════════════ */
+#chat-screen{flex-direction:column;width:100%}
+.chat-wrap{display:flex;flex-direction:column;width:100%;max-width:840px;height:100%;margin:0 auto}
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+/* Header */
+.hd{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 24px;
+  background:var(--glass);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border-bottom:1px solid var(--bd);flex-shrink:0;
+  position:relative;
+}
+.hd::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(138,43,226,0.3),transparent);
+}
+.hd-l{display:flex;align-items:center;gap:14px}
 
-    .field label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
+/* Smaller wordmark in header */
+.hd-mark{
+  font-size:1.25rem;font-weight:900;letter-spacing:-1px;
+  color:var(--tx);user-select:none;
+}
+.hd-mark .slash{
+  background:linear-gradient(140deg,#c084fc,#8a2be2);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
 
-    .field input {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 11px 14px;
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .field input::placeholder { color: var(--muted); }
-    .field input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
+.sep{width:1px;height:18px;background:var(--bd2)}
 
-    /* Join button */
-    .btn-join {
-      margin-top: 8px;
-      padding: 13px;
-      background: var(--accent);
-      border: none;
-      border-radius: var(--radius-sm);
-      color: #fff;
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .btn-join:hover  { background: #9d3ff5; }
-    .btn-join:active { background: var(--accent-dim); transform: scale(0.98); }
+.pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(138,43,226,0.07);
+  border:1px solid var(--bd);border-radius:999px;
+  padding:4px 12px 4px 8px;
+}
+.dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;
+  box-shadow:0 0 0 0 rgba(52,211,153,0.45);
+  animation:dotPulse 2.4s infinite;
+}
+@keyframes dotPulse{
+  0%{box-shadow:0 0 0 0 rgba(52,211,153,0.45)}
+  70%{box-shadow:0 0 0 6px rgba(52,211,153,0)}
+  100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}
+}
+.pill-txt{
+  font-size:0.73rem;font-weight:700;letter-spacing:0.04em;
+  background:linear-gradient(135deg,var(--ac2),var(--ac));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
 
-    /* Error message on join screen */
-    .join-error {
-      font-size: 0.8rem;
-      color: #e05c7a;
-      text-align: center;
-      min-height: 18px;
-    }
+.btn-leave{
+  background:rgba(255,255,255,0.025);
+  border:1px solid var(--bd2);border-radius:7px;
+  color:var(--tx2);font-family:var(--f);font-size:0.7rem;
+  font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  padding:7px 13px;cursor:pointer;
+  transition:all 0.2s;
+}
+.btn-leave:hover{background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.3);color:#f87171}
+.btn-leave:active{transform:scale(0.94)}
 
-    /* ══════════════════════════════════════════════════════════════
-       CHAT SCREEN
-    ══════════════════════════════════════════════════════════════ */
-    #chat-screen {
-      flex-direction: column;
-      max-width: 760px;
-      width: 100%;
-      margin: 0 auto;
-      height: 100%;
-    }
+/* Messages */
+.msgs{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:28px 24px;display:flex;flex-direction:column;gap:4px;
+  scroll-behavior:smooth;
+}
+.msgs::-webkit-scrollbar{width:3px}
+.msgs::-webkit-scrollbar-track{background:transparent}
+.msgs::-webkit-scrollbar-thumb{background:rgba(138,43,226,0.22);border-radius:3px}
 
-    .chat-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 22px;
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      box-shadow: 0 1px 0 rgba(138,43,226,0.1);
-    }
+/* Empty */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;user-select:none}
+.empty-ring{
+  width:48px;height:48px;border-radius:50%;
+  border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--mu);font-size:1.1rem;margin-bottom:6px;
+  animation:ringPulse 2.8s ease-in-out infinite;
+  position:relative;
+}
+.empty-ring::before{
+  content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:1px solid rgba(138,43,226,0.1);
+  animation:ringPulse 2.8s ease-in-out infinite 0.4s;
+}
+@keyframes ringPulse{
+  0%,100%{opacity:0.4}50%{opacity:1}
+}
+.empty p{font-size:0.78rem;font-weight:500;color:var(--mu)}
 
-    .chat-header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+/* Msg rows */
+.msg{display:flex;flex-direction:column;max-width:65%;opacity:0}
+.msg.own{align-self:flex-end;align-items:flex-end}
+.msg.other{align-self:flex-start;align-items:flex-start}
+.msg.sys{align-self:center;max-width:100%;opacity:1}
 
-    /* Live dot — pulses to signal an active connection */
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #39e08a;
-      box-shadow: 0 0 0 0 rgba(57,224,138,0.5);
-      animation: pulse 2s infinite;
-      flex-shrink: 0;
-    }
-    @keyframes pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(57,224,138,0.5); }
-      70%  { box-shadow: 0 0 0 6px rgba(57,224,138,0); }
-      100% { box-shadow: 0 0 0 0 rgba(57,224,138,0); }
-    }
+@keyframes fromRight{from{opacity:0;transform:translateX(20px) scale(0.95)}to{opacity:1;transform:none}}
+@keyframes fromLeft{from{opacity:0;transform:translateX(-20px) scale(0.95)}to{opacity:1;transform:none}}
+@keyframes fromCenter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.msg.own.in  {animation:fromRight  0.38s cubic-bezier(0.16,1,0.3,1) forwards}
+.msg.other.in{animation:fromLeft   0.38s cubic-bezier(0.16,1,0.3,1) forwards}
+.msg.sys.in  {animation:fromCenter 0.26s ease forwards;opacity:1}
 
-    .room-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .room-name {
-      font-weight: 700;
-      font-size: 0.92rem;
-      background: linear-gradient(135deg, #a855f7, #8a2be2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+/* Bubbles */
+.bbl{padding:10px 15px;border-radius:15px;word-break:break-word;position:relative}
+.msg.own   .bbl{
+  background:linear-gradient(148deg,#5e16b8 0%,#8a2be2 60%,#9d3ef5 100%);
+  border-bottom-right-radius:3px;
+  box-shadow:0 6px 24px rgba(138,43,226,0.38),0 0 0 1px rgba(192,132,252,0.12) inset;
+}
+.msg.other .bbl{
+  background:var(--glass2);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--bd2);border-bottom-left-radius:3px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.4);
+}
+.msg.sys   .bbl{background:none;border:none;padding:2px 0;box-shadow:none}
 
-    /* Leave button */
-    .btn-leave {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--muted);
-      font-family: var(--font-ui);
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-      text-transform: uppercase;
-    }
-    .btn-leave:hover { border-color: var(--muted); color: var(--text); }
+.txt{font-size:0.9rem;font-weight:400;color:var(--tx);line-height:1.56}
+.msg.sys .txt{font-size:0.69rem;color:var(--mu);font-weight:500;text-align:center;letter-spacing:0.02em}
 
-    /* Message list — scrollable area */
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      scroll-behavior: smooth;
-    }
-    /* Custom thin scrollbar */
-    .messages::-webkit-scrollbar { width: 4px; }
-    .messages::-webkit-scrollbar-track { background: transparent; }
-    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.meta{display:flex;align-items:center;gap:5px;margin-top:4px;padding:0 3px}
+.auth{font-size:0.64rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase}
+.msg.own   .auth{color:rgba(192,132,252,0.65)}
+.msg.other .auth{color:var(--ac2)}
+.ts{font-size:0.62rem;color:var(--mu);font-weight:500}
 
-    /* Empty state */
-    .empty-state {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-    .empty-state .icon { font-size: 2rem; opacity: 0.4; }
+/* Input */
+.ibar{
+  padding:14px 24px;
+  background:var(--glass);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border-top:1px solid var(--bd);
+  display:flex;gap:10px;align-items:center;flex-shrink:0;
+  position:relative;
+}
+.ibar::before{
+  content:'';position:absolute;top:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(138,43,226,0.28),transparent);
+}
+#mi{
+  flex:1;background:rgba(3,3,8,0.6);
+  border:1px solid var(--bd2);border-radius:8px;
+  padding:12px 15px;color:var(--tx);
+  font-family:var(--f);font-size:0.91rem;font-weight:400;outline:none;
+  transition:border-color 0.22s,box-shadow 0.25s,background 0.22s;
+}
+#mi::placeholder{color:var(--mu)}
+#mi:focus{
+  border-color:var(--ac);
+  background:rgba(138,43,226,0.04);
+  box-shadow:0 0 0 3px rgba(138,43,226,0.12),0 0 20px rgba(138,43,226,0.07);
+}
+.btn-send{
+  width:44px;height:44px;flex-shrink:0;border:none;border-radius:8px;
+  background:linear-gradient(130deg,#6b1abf,#8a2be2,#a44cf0);
+  background-size:200% 100%;background-position:0% 50%;
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(138,43,226,0.45);
+  transition:transform 0.16s,box-shadow 0.2s,background-position 0.4s;
+}
+.btn-send:hover{
+  background-position:100% 50%;
+  transform:translateY(-2px) scale(1.06);
+  box-shadow:0 8px 30px rgba(138,43,226,0.62);
+}
+.btn-send:active{transform:scale(0.9)}
+.btn-send svg{pointer-events:none}
 
-    /* ── Individual message bubble ─────────────────────────────── */
-    .message {
-      display: flex;
-      flex-direction: column;
-      max-width: 72%;
-      padding: 10px 14px;
-      border-radius: var(--radius);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      position: relative;
-      word-break: break-word;
-      animation: msgIn 0.3s cubic-bezier(0.16,1,0.3,1) both;
-    }
-    @keyframes msgIn { from { opacity:0; transform:translateY(8px) scale(0.97); } to { opacity:1; transform:none; } }
+/* ── Screen transitions ── */
+.x-out{animation:xOut 0.32s cubic-bezier(0.4,0,0.6,1) forwards;pointer-events:none}
+.x-in {animation:xIn  0.55s cubic-bezier(0.16,1,0.3,1) forwards}
+@keyframes xOut{
+  0%{opacity:1;transform:scale(1) translateY(0) blur(0)}
+  100%{opacity:0;transform:scale(0.94) translateY(-16px);filter:blur(4px)}
+}
+@keyframes xIn{
+  0%{opacity:0;transform:scale(0.96) translateY(22px);filter:blur(4px)}
+  100%{opacity:1;transform:none;filter:blur(0)}
+}
 
-    .message.own {
-      align-self: flex-end;
-      background: linear-gradient(135deg, #6b21c8, #8a2be2);
-      border-color: rgba(168,85,247,0.25);
-      box-shadow: 0 4px 18px rgba(138,43,226,0.3);
-    }
-
-    .message.other {
-      align-self: flex-start;
-      background: var(--surface2);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-    }
-
-    /* System / info messages span the full width, centered */
-    .message.system {
-      align-self: center;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 0.78rem;
-      text-align: center;
-      padding: 4px 0;
-      max-width: 100%;
-    }
-
-    .message-meta {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 3px;
-    }
-
-    .message-author {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    /* Own messages label in accent purple */
-    .message.own .message-author { color: var(--accent); }
-    .message.other .message-author { color: #7ecfff; }
-
-    .message-time {
-      font-size: 0.68rem;
-      color: var(--muted);
-      font-family: var(--font-mono);
-    }
-
-    .message-text {
-      font-size: 0.93rem;
-      color: var(--text);
-    }
-
-    .chat-input-bar {
-      padding: 14px 22px;
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-shrink: 0;
-      box-shadow: 0 -1px 0 rgba(138,43,226,0.07);
-    }
-
-    #msg-input {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 11px 14px;
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.15s;
-      resize: none;
-    }
-    #msg-input::placeholder { color: var(--muted); }
-    #msg-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    .btn-send {
-      width: 44px; height: 44px;
-      background: linear-gradient(135deg, #8a2be2, #a855f7);
-      border: none;
-      border-radius: var(--radius-sm);
-      color: #fff;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 4px 16px rgba(138,43,226,0.4);
-    }
-    .btn-send:hover  { transform: translateY(-1px) scale(1.05); box-shadow: 0 6px 22px rgba(138,43,226,0.55); }
-    .btn-send:active { transform: scale(0.92); }
-    .btn-send svg    { pointer-events: none; }
-
-    /* ── Responsive tweaks ────────────────────────────────────── */
-    @media (max-width: 480px) {
-      .join-card { padding: 28px 20px; }
-      .message   { max-width: 88%; }
-      .wordmark  { letter-spacing: -1px; }
-    }
-  </style>
+@media(max-width:520px){
+  .card{padding:28px 18px}
+  .msg{max-width:88%}
+  .hd{padding:11px 16px}
+  .msgs{padding:16px 14px}
+  .ibar{padding:12px 14px}
+  .hd-mark{font-size:1.05rem}
+  .wordmark{letter-spacing:-3px}
+}
+</style>
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       SCREEN 1: JOIN
-       Users enter a username and a room code here.
-  ════════════════════════════════════════════════════════════ -->
-  <div id="join-screen" class="screen active">
+<!-- Particle canvas -->
+<canvas id="cv"></canvas>
 
-    <!-- App name — the slash in "Ne/xus" is our signature purple mark -->
-    <h1 class="wordmark">Ne<span>/</span>xus</h1>
-    <p class="tagline">by <span>AstroFlux</span></p>
+<!-- ════════ JOIN ════════ -->
+<div id="join-screen" class="screen active">
+  <div class="join-wrap">
 
-    <div class="join-card">
+    <h1 class="wordmark">Ne<span class="slash">/</span>xus</h1>
+    <p class="tagline">by <b>AstroFlux</b></p>
 
+    <div class="card">
       <div class="field">
-        <label for="username-input">Your name</label>
-        <input
-          id="username-input"
-          type="text"
-          placeholder="e.g. alex"
-          maxlength="24"
-          autocomplete="off"
-          spellcheck="false"
-        />
+        <label for="uname">Handle</label>
+        <input id="uname" type="text" placeholder="your name" maxlength="24" autocomplete="off" spellcheck="false"/>
       </div>
-
       <div class="field">
-        <label for="room-input">Room code</label>
-        <input
-          id="room-input"
-          type="text"
-          placeholder="e.g. launch-party"
-          maxlength="40"
-          autocomplete="off"
-          spellcheck="false"
-        />
+        <label for="rcode">Room code</label>
+        <input id="rcode" type="text" placeholder="e.g. launch-party" maxlength="40" autocomplete="off" spellcheck="false"/>
       </div>
-
-      <p class="join-error" id="join-error"></p>
-
-      <button class="btn-join" id="join-btn">Connect →</button>
-
+      <p class="err" id="jerr"></p>
+      <button class="btn-join" id="jbtn">Connect →</button>
     </div>
+
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       SCREEN 2: CHAT
-       Live message list + input bar shown after joining.
-  ════════════════════════════════════════════════════════════ -->
-  <div id="chat-screen" class="screen">
+<!-- ════════ CHAT ════════ -->
+<div id="chat-screen" class="screen">
+  <div class="chat-wrap">
 
-    <!-- Header bar with room info and a Leave button -->
-    <div class="chat-header">
-      <div class="chat-header-left">
-        <div class="live-dot" title="Connected"></div>
-        <div>
-          <div class="room-label">Room</div>
-          <div class="room-name" id="room-display"></div>
+    <div class="hd">
+      <div class="hd-l">
+        <div class="hd-mark">Ne<span class="slash">/</span>xus</div>
+        <div class="sep"></div>
+        <div class="pill">
+          <div class="dot"></div>
+          <div class="pill-txt" id="rdsp"></div>
         </div>
       </div>
-      <button class="btn-leave" id="leave-btn">Leave</button>
+      <button class="btn-leave" id="lbtn">Leave</button>
     </div>
 
-    <!-- Scrollable message list -->
-    <div class="messages" id="messages">
-      <!-- Messages are injected here by JavaScript -->
-      <div class="empty-state" id="empty-state">
-        <div class="icon">✦</div>
-        <div>No messages yet — say hello!</div>
+    <div class="msgs" id="msgs">
+      <div class="empty" id="empty">
+        <div class="empty-ring">✦</div>
+        <p>No messages yet</p>
+        <p style="font-size:0.7rem;margin-top:2px">Say something to start</p>
       </div>
     </div>
 
-    <!-- Bottom input bar -->
-    <div class="chat-input-bar">
-      <input
-        id="msg-input"
-        type="text"
-        placeholder="Send a message…"
-        maxlength="500"
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <button class="btn-send" id="send-btn" title="Send">
-        <!-- Paper-plane icon -->
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.2"
-             stroke-linecap="round" stroke-linejoin="round">
+    <div class="ibar">
+      <input id="mi" type="text" placeholder="Send a message…" maxlength="500" autocomplete="off" spellcheck="false"/>
+      <button class="btn-send" id="sbtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <line x1="22" y1="2" x2="11" y2="13"/>
           <polygon points="22 2 15 22 11 13 2 9 22 2"/>
         </svg>
@@ -544,244 +426,186 @@
     </div>
 
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       JAVASCRIPT — All app logic lives here
-  ════════════════════════════════════════════════════════════ -->
-  <script>
-    // ─────────────────────────────────────────────────────────────
-    // ⚙️  CONFIGURATION — paste your PubNub keys here
-    // ─────────────────────────────────────────────────────────────
-    // Keys are set at the very top of this file (lines 6-7)
-    // ─────────────────────────────────────────────────────────────
+<script>
+/* ── Particle canvas background ── */
+(function(){
+  const cv=document.getElementById('cv');
+  const ctx=cv.getContext('2d');
+  let W,H,pts=[];
 
+  function resize(){
+    W=cv.width=innerWidth;
+    H=cv.height=innerHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
 
-    // ── State ────────────────────────────────────────────────────
-    let pubnub   = null;   // PubNub instance, created after join
-    let myName   = "";     // the local user's chosen username
-    let myRoom   = "";     // the channel / room code
-
-
-    // ── DOM references ───────────────────────────────────────────
-    const joinScreen    = document.getElementById("join-screen");
-    const chatScreen    = document.getElementById("chat-screen");
-    const usernameInput = document.getElementById("username-input");
-    const roomInput     = document.getElementById("room-input");
-    const joinBtn       = document.getElementById("join-btn");
-    const joinError     = document.getElementById("join-error");
-    const messagesEl    = document.getElementById("messages");
-    const emptyState    = document.getElementById("empty-state");
-    const msgInput      = document.getElementById("msg-input");
-    const sendBtn       = document.getElementById("send-btn");
-    const roomDisplay   = document.getElementById("room-display");
-    const leaveBtn      = document.getElementById("leave-btn");
-
-
-    // ── JOIN LOGIC ───────────────────────────────────────────────
-
-    // Pressing Enter on either join-screen input triggers the join
-    [usernameInput, roomInput].forEach(el => {
-      el.addEventListener("keydown", e => {
-        if (e.key === "Enter") handleJoin();
-      });
+  const N=90;
+  for(let i=0;i<N;i++){
+    pts.push({
+      x:Math.random()*W,y:Math.random()*H,
+      vx:(Math.random()-0.5)*0.18,
+      vy:(Math.random()-0.5)*0.18,
+      r:Math.random()*1.2+0.2,
+      a:Math.random()
     });
+  }
 
-    joinBtn.addEventListener("click", handleJoin);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
 
-    function handleJoin() {
-      // Trim whitespace so " alex " becomes "alex"
-      const name = usernameInput.value.trim();
-      const room = roomInput.value.trim();
-
-      // Basic validation — both fields are required
-      if (!name) { showJoinError("Please enter a username."); return; }
-      if (!room) { showJoinError("Please enter a room code."); return; }
-
-      // Warn if keys look like they haven't been replaced yet
-      if (
-        PUBNUB_PUBLISH_KEY.startsWith("PASTE") ||
-        PUBNUB_SUBSCRIBE_KEY.startsWith("PASTE")
-      ) {
-        showJoinError("Add your PubNub keys at the top of index.html first.");
-        return;
-      }
-
-      myName = name;
-      myRoom = room;
-      joinError.textContent = "";
-
-      // Switch to the chat screen
-      joinScreen.classList.remove("active");
-      chatScreen.classList.add("active");
-      roomDisplay.textContent = "#" + myRoom;
-
-      // Connect to PubNub
-      initPubNub();
-    }
-
-    function showJoinError(msg) {
-      joinError.textContent = msg;
-    }
-
-
-    // ── PUBNUB SETUP ─────────────────────────────────────────────
-
-    function initPubNub() {
-      // Create a PubNub client instance.
-      // Each user needs a unique UUID so PubNub can track presence.
-      pubnub = new PubNub({
-        publishKey:   PUBNUB_PUBLISH_KEY,
-        subscribeKey: PUBNUB_SUBSCRIBE_KEY,
-        uuid: myName + "_" + Math.random().toString(36).slice(2, 7)
-      });
-
-      // Add a listener for incoming messages and connection events
-      pubnub.addListener({
-
-        // Called whenever a new message arrives on our channel
-        message: function(event) {
-          const data = event.message;
-
-          // Decide if this message is from us or someone else
-          const isOwn = data.sender === myName;
-          appendMessage(data.sender, data.text, isOwn, false);
-        },
-
-        // Called when the PubNub connection status changes
-        status: function(event) {
-          if (event.category === "PNConnectedCategory") {
-            // Successfully connected — let the room know we arrived
-            appendSystemMessage(myName + " joined the room");
-          }
-          if (event.category === "PNNetworkIssuesCategory" ||
-              event.category === "PNNetworkDownCategory") {
-            appendSystemMessage("Connection lost — trying to reconnect…");
-          }
+    /* connect nearby particles */
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<140){
+          const op=(1-d/140)*0.25;
+          ctx.beginPath();
+          ctx.strokeStyle=`rgba(138,43,226,${op})`;
+          ctx.lineWidth=0.6;
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.stroke();
         }
-      });
-
-      // Subscribe to the room channel.
-      // The room code becomes the PubNub channel name directly.
-      pubnub.subscribe({ channels: [myRoom] });
-
-      // Focus the message input so the user can type right away
-      msgInput.focus();
-    }
-
-
-    // ── SENDING MESSAGES ─────────────────────────────────────────
-
-    // Enter key sends; Shift+Enter is reserved for future multi-line use
-    msgInput.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
       }
-    });
-
-    sendBtn.addEventListener("click", sendMessage);
-
-    function sendMessage() {
-      const text = msgInput.value.trim();
-      if (!text || !pubnub) return;
-
-      // Clear the input immediately so the user can keep typing
-      msgInput.value = "";
-
-      // Publish the message to PubNub.
-      // PubNub delivers it to everyone subscribed to this channel,
-      // including ourselves — so we don't manually add it to the UI here.
-      pubnub.publish({
-        channel: myRoom,
-        message: {
-          sender: myName,
-          text:   text
-        }
-      });
     }
 
-
-    // ── RENDERING MESSAGES ───────────────────────────────────────
-
-    /**
-     * Appends a chat bubble to the message list.
-     * @param {string}  sender  — username
-     * @param {string}  text    — message body
-     * @param {boolean} isOwn   — true if sent by the local user
-     * @param {boolean} isSystem — true for status-only lines
-     */
-    function appendMessage(sender, text, isOwn, isSystem) {
-      // Remove the "No messages yet" placeholder on first message
-      if (emptyState) emptyState.remove();
-
-      const bubble = document.createElement("div");
-      bubble.className = "message " + (isSystem ? "system" : isOwn ? "own" : "other");
-
-      if (!isSystem) {
-        // Format a short HH:MM timestamp
-        const now  = new Date();
-        const time = now.getHours().toString().padStart(2,"0") + ":" +
-                     now.getMinutes().toString().padStart(2,"0");
-
-        bubble.innerHTML = `
-          <div class="message-meta">
-            <span class="message-author">${escapeHtml(sender)}</span>
-            <span class="message-time">${time}</span>
-          </div>
-          <div class="message-text">${escapeHtml(text)}</div>
-        `;
-      } else {
-        bubble.textContent = text;
-      }
-
-      messagesEl.appendChild(bubble);
-
-      // Auto-scroll to the newest message
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+    /* dots */
+    for(const p of pts){
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(168,85,247,${p.a*0.55})`;
+      ctx.fill();
+      /* move */
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
     }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
 
-    function appendSystemMessage(text) {
-      appendMessage("", text, false, true);
+/* ── App logic ── */
+let pn=null,myName='',myRoom='';
+
+const JS=document.getElementById('join-screen');
+const CS=document.getElementById('chat-screen');
+const uname=document.getElementById('uname');
+const rcode=document.getElementById('rcode');
+const jbtn=document.getElementById('jbtn');
+const jerr=document.getElementById('jerr');
+const msgs=document.getElementById('msgs');
+const mi=document.getElementById('mi');
+const sbtn=document.getElementById('sbtn');
+const rdsp=document.getElementById('rdsp');
+const lbtn=document.getElementById('lbtn');
+
+[uname,rcode].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')doJoin()}));
+jbtn.addEventListener('click',doJoin);
+
+/* Ripple effect on join button */
+jbtn.addEventListener('mousedown',function(e){
+  const r=this.getBoundingClientRect();
+  const rip=document.createElement('span');
+  rip.className='rip';
+  const s=Math.max(this.offsetWidth,this.offsetHeight);
+  rip.style.cssText=`width:${s}px;height:${s}px;left:${e.clientX-r.left-s/2}px;top:${e.clientY-r.top-s/2}px`;
+  this.appendChild(rip);
+  setTimeout(()=>rip.remove(),600);
+});
+
+function doJoin(){
+  const n=uname.value.trim(),r=rcode.value.trim();
+  if(!n){jerr.textContent='Enter a handle.';return}
+  if(!r){jerr.textContent='Enter a room code.';return}
+  if(PUBNUB_PUBLISH_KEY.startsWith('PASTE')||PUBNUB_SUBSCRIBE_KEY.startsWith('PASTE')){
+    jerr.textContent='Add your PubNub keys at the top of index.html first.';return;
+  }
+  jerr.textContent='';
+  myName=n;myRoom=r;
+  rdsp.textContent='#'+myRoom;
+
+  JS.classList.add('x-out');
+  setTimeout(()=>{
+    JS.classList.remove('active','x-out');
+    CS.classList.add('active','x-in');
+    CS.addEventListener('animationend',()=>CS.classList.remove('x-in'),{once:true});
+  },300);
+
+  initPN();
+}
+
+function initPN(){
+  pn=new PubNub({
+    publishKey:PUBNUB_PUBLISH_KEY,
+    subscribeKey:PUBNUB_SUBSCRIBE_KEY,
+    uuid:myName+'_'+Math.random().toString(36).slice(2,7)
+  });
+  pn.addListener({
+    message(ev){const d=ev.message;addMsg(d.sender,d.text,d.sender===myName,false)},
+    status(ev){
+      if(ev.category==='PNConnectedCategory')sysmsg(myName+' joined the room');
+      if(ev.category==='PNNetworkIssuesCategory'||ev.category==='PNNetworkDownCategory')sysmsg('Connection lost — reconnecting…');
     }
+  });
+  pn.subscribe({channels:[myRoom]});
+  mi.focus();
+}
 
-    /**
-     * Sanitise text before injecting into innerHTML.
-     * This prevents XSS — never skip this for user-supplied strings.
-     */
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+mi.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+sbtn.addEventListener('click',send);
+function send(){
+  const t=mi.value.trim();
+  if(!t||!pn)return;
+  mi.value='';
+  pn.publish({channel:myRoom,message:{sender:myName,text:t}});
+}
 
+function addMsg(sender,text,own,sys){
+  const es=document.getElementById('empty');
+  if(es)es.remove();
 
-    // ── LEAVE ROOM ───────────────────────────────────────────────
+  const w=document.createElement('div');
+  w.className='msg '+(sys?'sys':own?'own':'other');
 
-    leaveBtn.addEventListener("click", leaveRoom);
+  const now=new Date();
+  const ts=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
 
-    function leaveRoom() {
-      if (pubnub) {
-        // Unsubscribe cleanly before disconnecting
-        pubnub.unsubscribeAll();
-        pubnub = null;
-      }
+  if(!sys){
+    w.innerHTML=`<div class="bbl"><div class="txt">${esc(text)}</div></div><div class="meta"><span class="auth">${esc(sender)}</span><span class="ts">${ts}</span></div>`;
+  } else {
+    w.innerHTML=`<div class="bbl"><div class="txt">${esc(text)}</div></div>`;
+    w.classList.add('in');
+  }
 
-      // Clear the message list for the next session
-      messagesEl.innerHTML = `
-        <div class="empty-state" id="empty-state">
-          <div class="icon">✦</div>
-          <div>No messages yet — say hello!</div>
-        </div>
-      `;
+  msgs.appendChild(w);
+  if(!sys) requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('in')));
+  msgs.scrollTop=msgs.scrollHeight;
+}
 
-      // Switch back to the join screen
-      chatScreen.classList.remove("active");
-      joinScreen.classList.add("active");
-      usernameInput.focus();
-    }
-  </script>
+function sysmsg(t){addMsg('',t,false,true)}
+
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+lbtn.addEventListener('click',doLeave);
+function doLeave(){
+  if(pn){pn.unsubscribeAll();pn=null}
+  msgs.innerHTML=`<div class="empty" id="empty"><div class="empty-ring">✦</div><p>No messages yet</p><p style="font-size:0.7rem;margin-top:2px">Say something to start</p></div>`;
+
+  CS.classList.add('x-out');
+  setTimeout(()=>{
+    CS.classList.remove('active','x-out');
+    JS.classList.add('active','x-in');
+    JS.addEventListener('animationend',()=>JS.classList.remove('x-in'),{once:true});
+    uname.focus();
+  },300);
+}
+</script>
 </body>
 </html>
