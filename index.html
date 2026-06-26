@@ -297,6 +297,14 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);
 .msg.own   .auth{color:rgba(192,132,252,0.65)}
 .msg.other .auth{color:var(--ac2)}
 .ts{font-size:0.62rem;color:var(--mu);font-weight:500}
+.dev-tag{
+  font-size:0.58rem;font-weight:800;letter-spacing:0.12em;
+  color:var(--ac2);border:1px solid var(--bd);
+  border-radius:4px;padding:1px 5px;
+  background:rgba(138,43,226,0.1);
+  text-transform:uppercase;
+  box-shadow:0 0 6px rgba(138,43,226,0.2);
+}
 
 /* Input */
 .ibar{
@@ -576,7 +584,8 @@ function addMsg(sender,text,own,sys){
   const ts=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
 
   if(!sys){
-    w.innerHTML=`<div class="bbl"><div class="txt">${esc(text)}</div></div><div class="meta"><span class="auth">${esc(sender)}</span><span class="ts">${ts}</span></div>`;
+    const devBadge=sender==='ASTRO'?'<span class="dev-tag">DEV</span>':'';
+    w.innerHTML=`<div class="bbl"><div class="txt">${esc(text)}</div></div><div class="meta"><span class="auth">${esc(sender)}</span>${devBadge}<span class="ts">${ts}</span></div>`;
   } else {
     w.innerHTML=`<div class="bbl"><div class="txt">${esc(text)}</div></div>`;
     w.classList.add('in');
