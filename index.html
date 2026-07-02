@@ -203,13 +203,27 @@ async function logOut() {
 /* ────────────────────────────────────────────
    AUTH STATE
 ──────────────────────────────────────────── */
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, user => {
   if (user) {
     currentUser = user;
-    try { await updateDoc(doc(db, 'users', user.uid), { online: true }); } catch(e) {}
-    initPubNub(user.uid);
-    renderApp();
-    showScreen('app-screen');
+
+    /* upsert user doc — use setDoc with merge so it works even if doc missing */
+    setDoc(doc(db, 'users', user.uid), {
+      uid:         user.uid,
+      displayName: user.displayName || user.email.split('@')[0],
+      email:       user.email,
+      online:      true
+    }, { merge: true }).catch(e => console.warn('user doc upsert:', e.message));
+
+    try { initPubNub(user.uid); } catch(e) { console.warn('PubNub init:', e.message); }
+
+    /* wait for DOM to be ready before rendering */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => { renderApp(); showScreen('app-screen'); });
+    } else {
+      renderApp();
+      showScreen('app-screen');
+    }
   } else {
     currentUser = null;
     if (pubnub) { try { pubnub.unsubscribeAll(); } catch(e){} pubnub = null; }
