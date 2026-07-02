@@ -191,23 +191,82 @@ function listenSidebar(){
 function listenMsgs(id){
   if(convUnsub){convUnsub();convUnsub=null;}
   const r=ref(db,'conversations/'+id+'/messages');
-  const h=snap=>{
+  // onValue does a full re-render each time = duplicates on send.
+  // Fix: render once on first snapshot, then use child events for live updates.
+  let initialDone=false;
+
+  const fullH=snap=>{
+    if(initialDone) return; // ignore subsequent full snapshots
+    initialDone=true;
     const el=$('msgs'); if(!el) return;
     el.innerHTML=''; let lastD='';
     if(snap.exists()){
       snap.forEach(c=>{
         const m={...c.val(),_key:c.key};
         const ds=fmtDate(m.ts);
-        if(ds!==lastD){
-          const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`;
-          el.appendChild(sep); lastD=ds;
-        }
+        if(ds!==lastD){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); lastD=ds; }
         appendMsg(m);
       });
     }
     scrollMsgs();
   };
-  onValue(r,h); convUnsub=()=>off(r,'value',h);
+
+  // child_added fires for existing + new children
+  // We use it only AFTER the initial onValue has painted everything
+  const addH=snap2=>{
+    if(!initialDone) return; // wait for initial render
+    const m={...snap2.val(),_key:snap2.key};
+    if(document.querySelector(`.msg-row[data-key="${m._key}"]`)) return; // already rendered
+    const el=$('msgs'); if(!el) return;
+    const ds=fmtDate(m.ts);
+    const lastSepTxt=el.querySelector('.date-sep:last-of-type span')?.textContent;
+    if(ds!==lastSepTxt){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); }
+    appendMsg(m); scrollMsgs();
+  };
+
+  const remH=snap2=>{
+    document.querySelector(`.msg-row[data-key="${snap2.key}"]`)?.remove();
+  };
+
+  onValue(r,fullH,{onlyOnce:true});
+  const u1=onValue(ref(db,'conversations/'+id+'/messages'),()=>{}); // keep connection
+  // use raw on() for child events via the imported functions
+  // Actually use onValue child simulation via the existing `onValue` + tracking
+  // Simpler: just re-use onValue but guard against duplicates with a Set
+  const seen=new Set();
+  const mainH=snap=>{
+    const el=$('msgs'); if(!el) return;
+    if(!initialDone){
+      initialDone=true;
+      el.innerHTML=''; let lastD='';
+      if(snap.exists()) snap.forEach(c=>{
+        const m={...c.val(),_key:c.key}; seen.add(m._key);
+        const ds=fmtDate(m.ts);
+        if(ds!==lastD){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); lastD=ds; }
+        appendMsg(m);
+      });
+      scrollMsgs();
+    } else {
+      // Only process new/removed keys
+      const current=new Set();
+      if(snap.exists()) snap.forEach(c=>current.add(c.key));
+      // Remove deleted
+      seen.forEach(k=>{ if(!current.has(k)){ document.querySelector(`.msg-row[data-key="${k}"]`)?.remove(); seen.delete(k); } });
+      // Add new
+      if(snap.exists()) snap.forEach(c=>{
+        if(!seen.has(c.key)){
+          seen.add(c.key);
+          const m={...c.val(),_key:c.key};
+          const ds=fmtDate(m.ts);
+          const lastSepTxt=el.querySelector('.date-sep:last-of-type span')?.textContent;
+          if(ds!==lastSepTxt){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); }
+          appendMsg(m); scrollMsgs();
+        }
+      });
+    }
+  };
+  onValue(r,mainH);
+  convUnsub=()=>off(r,'value',mainH);
 }
 
 async function sendMsg(text){
@@ -390,8 +449,7 @@ function appendMsg(m){
   el.appendChild(w);
   if(own) w.querySelector('.msg-del')?.addEventListener('click',e=>{
     e.stopPropagation();
-    const key=e.currentTarget.dataset.key;
-    confirm('Delete this message?',()=>deleteMsg(activeCid,key));
+    deleteMsg(activeCid,e.currentTarget.dataset.key);
   });
   requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('msg-in')));
 }
