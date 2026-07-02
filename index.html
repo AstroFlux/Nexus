@@ -18,10 +18,9 @@ import { initializeApp }                        from "https://www.gstatic.com/fi
 import { getAuth, createUserWithEmailAndPassword,
          signInWithEmailAndPassword, signOut,
          onAuthStateChanged, updateProfile }    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc,
-         collection, getDocs, query, where,
-         orderBy, serverTimestamp, onSnapshot,
-         addDoc, updateDoc, arrayUnion }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getDatabase, ref, set, get, update,
+         push, onValue, off, query as dbQuery,
+         orderByChild, limitToLast }            from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 /* ── Firebase config ── */
 const firebaseConfig = {
@@ -36,7 +35,7 @@ const firebaseConfig = {
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db   = getFirestore(app);
+const db   = getDatabase(app);
 
 /* ────────────────────────────────────────────
    STATE
@@ -86,13 +85,13 @@ function esc(s) {
 
 function fmtTime(ts) {
   if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const d = new Date(typeof ts === 'number' ? ts : ts.toDate ? ts.toDate() : ts);
   return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
 }
 
 function fmtDate(ts) {
   if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const d = new Date(typeof ts === 'number' ? ts : ts.toDate ? ts.toDate() : ts);
   const now = new Date();
   if (d.toDateString() === now.toDateString()) return 'Today';
   const yest = new Date(now); yest.setDate(now.getDate() - 1);
@@ -171,22 +170,11 @@ function sendTypingSignal(convId) {
    AUTH
 ──────────────────────────────────────────── */
 async function signUp(email, password, displayName) {
-  // Step 1: create the Firebase Auth account
   const cred = await createUserWithEmailAndPassword(auth, email, password);
-  // Step 2: set display name on the auth profile
   await updateProfile(cred.user, { displayName });
-  // Step 3: write user document to Firestore (non-fatal if rules block it)
-  try {
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      uid:         cred.user.uid,
-      displayName,
-      email,
-      createdAt:   serverTimestamp(),
-      online:      true
-    });
-  } catch(fsErr) {
-    console.warn('Firestore write failed (check rules):', fsErr.message);
-  }
+  await set(ref(db, 'users/' + cred.user.uid), {
+    uid: cred.user.uid, displayName, email, online: true, createdAt: Date.now()
+  });
 }
 
 async function logIn(email, password) {
@@ -195,7 +183,7 @@ async function logIn(email, password) {
 
 async function logOut() {
   if (currentUser) {
-    await updateDoc(doc(db, 'users', currentUser.uid), { online: false }).catch(()=>{});
+    await update(ref(db, 'users/' + currentUser.uid), { online: false }).catch(()=>{});
   }
   await signOut(auth);
 }
@@ -206,18 +194,15 @@ async function logOut() {
 onAuthStateChanged(auth, user => {
   if (user) {
     currentUser = user;
-
-    /* upsert user doc — use setDoc with merge so it works even if doc missing */
-    setDoc(doc(db, 'users', user.uid), {
-      uid:         user.uid,
+    update(ref(db, 'users/' + user.uid), {
+      uid: user.uid,
       displayName: user.displayName || user.email.split('@')[0],
-      email:       user.email,
-      online:      true
-    }, { merge: true }).catch(e => console.warn('user doc upsert:', e.message));
+      email: user.email,
+      online: true
+    }).catch(e => console.warn('user upsert:', e.message));
 
-    try { initPubNub(user.uid); } catch(e) { console.warn('PubNub init:', e.message); }
+    try { initPubNub(user.uid); } catch(e) { console.warn('PubNub:', e.message); }
 
-    /* wait for DOM to be ready before rendering */
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => { renderApp(); showScreen('app-screen'); });
     } else {
@@ -237,10 +222,11 @@ onAuthStateChanged(auth, user => {
    FIRESTORE — USERS
 ──────────────────────────────────────────── */
 async function searchUsers(term) {
-  const snap = await getDocs(collection(db, 'users'));
+  const snap = await get(ref(db, 'users'));
   const results = [];
-  snap.forEach(d => {
-    const u = d.data();
+  if (!snap.exists()) return results;
+  snap.forEach(child => {
+    const u = child.val();
     if (u.uid === currentUser.uid) return;
     const name  = (u.displayName || '').toLowerCase();
     const email = (u.email       || '').toLowerCase();
@@ -259,11 +245,10 @@ function convId(uid1, uid2) {
 }
 
 async function getOrCreateConv(otherUser) {
-  const id  = convId(currentUser.uid, otherUser.uid);
-  const ref = doc(db, 'conversations', id);
-  const snap = await getDoc(ref);
+  const id   = convId(currentUser.uid, otherUser.uid);
+  const snap = await get(ref(db, 'conversations/' + id));
   if (!snap.exists()) {
-    await setDoc(ref, {
+    await set(ref(db, 'conversations/' + id), {
       id,
       participants: [currentUser.uid, otherUser.uid],
       participantNames: {
@@ -271,8 +256,8 @@ async function getOrCreateConv(otherUser) {
         [otherUser.uid]:   otherUser.displayName
       },
       lastMessage: '',
-      lastTs:      serverTimestamp(),
-      createdAt:   serverTimestamp()
+      lastTs: Date.now(),
+      createdAt: Date.now()
     });
   }
   return id;
@@ -280,42 +265,49 @@ async function getOrCreateConv(otherUser) {
 
 /* Real-time sidebar conversations */
 function listenSidebar() {
-  if (sidebarUnsub) sidebarUnsub();
-  const q = query(
-    collection(db, 'conversations'),
-    where('participants','array-contains', currentUser.uid),
-    orderBy('lastTs','desc')
-  );
-  sidebarUnsub = onSnapshot(q, snap => {
-    renderConvList(snap.docs.map(d => d.data()));
-  });
+  if (sidebarUnsub) { off(ref(db, 'conversations')); sidebarUnsub = null; }
+  const convRef = ref(db, 'conversations');
+  const handler = snap => {
+    const convs = [];
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const c = child.val();
+        if (c.participants && c.participants.includes(currentUser.uid)) convs.push(c);
+      });
+      convs.sort((a,b) => (b.lastTs||0) - (a.lastTs||0));
+    }
+    renderConvList(convs);
+  };
+  onValue(convRef, handler);
+  sidebarUnsub = () => off(convRef, 'value', handler);
 }
 
 /* Real-time messages */
 function listenMessages(cid) {
-  if (convUnsub) convUnsub();
-  const q = query(
-    collection(db, 'conversations', cid, 'messages'),
-    orderBy('ts','asc')
-  );
-  convUnsub = onSnapshot(q, snap => {
+  if (convUnsub) { convUnsub(); convUnsub = null; }
+  const msgsRef = ref(db, 'conversations/' + cid + '/messages');
+  const handler = snap => {
     const msgsEl = $('messages');
     if (!msgsEl) return;
     msgsEl.innerHTML = '';
     let lastDate = '';
-    snap.docs.forEach(d => {
-      const m   = d.data();
-      const dStr = fmtDate(m.ts);
-      if (dStr !== lastDate) {
-        const sep = el('div'); sep.className = 'date-sep';
-        sep.innerHTML = `<span>${dStr}</span>`;
-        msgsEl.appendChild(sep);
-        lastDate = dStr;
-      }
-      appendMessage(m);
-    });
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const m = child.val();
+        const dStr = fmtDate(m.ts);
+        if (dStr !== lastDate) {
+          const sep = el('div'); sep.className = 'date-sep';
+          sep.innerHTML = `<span>${dStr}</span>`;
+          msgsEl.appendChild(sep);
+          lastDate = dStr;
+        }
+        appendMessage(m);
+      });
+    }
     scrollMsgs();
-  });
+  };
+  onValue(msgsRef, handler);
+  convUnsub = () => off(msgsRef, 'value', handler);
 }
 
 async function sendMessage(text) {
@@ -324,14 +316,14 @@ async function sendMessage(text) {
     uid:    currentUser.uid,
     sender: currentUser.displayName,
     text:   text.trim(),
-    ts:     serverTimestamp()
+    ts:     Date.now()
   };
-  await addDoc(collection(db, 'conversations', activeConvId, 'messages'), msg);
-  await updateDoc(doc(db, 'conversations', activeConvId), {
+  const msgsRef = ref(db, 'conversations/' + activeConvId + '/messages');
+  await push(msgsRef, msg);
+  await update(ref(db, 'conversations/' + activeConvId), {
     lastMessage: text.trim().slice(0, 80),
-    lastTs:      serverTimestamp()
+    lastTs:      Date.now()
   });
-  /* PubNub: notify other user in real-time */
   if (pubnub && activeOtherUser) {
     pubnub.publish({
       channel: `user.${activeOtherUser.uid}`,
