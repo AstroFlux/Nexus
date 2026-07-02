@@ -634,15 +634,20 @@ function renderSearchResults(users) {
         toast('Account created!', 'success');
       }
     } catch(err) {
-      console.error('Auth error:', err);
-      let msg = err.message || 'Something went wrong.';
-      msg = msg.replace('Firebase: ','').replace(/\(auth\/[^)]+\)\.?/,'').trim();
-      if (err.code === 'auth/email-already-in-use') msg = 'Email already in use. Try signing in.';
-      if (err.code === 'auth/weak-password')        msg = 'Password must be at least 6 characters.';
-      if (err.code === 'auth/invalid-email')         msg = 'Invalid email address.';
-      if (err.code === 'auth/user-not-found')        msg = 'No account found with that email.';
-      if (err.code === 'auth/wrong-password')        msg = 'Incorrect password.';
-      if (err.code === 'auth/invalid-credential')    msg = 'Incorrect email or password.';
+      console.error('Auth error full:', err, 'code:', err.code, 'msg:', err.message);
+      let msg = '';
+      const code = err.code || '';
+      if (code === 'auth/email-already-in-use')    msg = 'Email already in use. Try signing in.';
+      else if (code === 'auth/weak-password')      msg = 'Password must be at least 6 characters.';
+      else if (code === 'auth/invalid-email')      msg = 'Invalid email address.';
+      else if (code === 'auth/user-not-found')     msg = 'No account found with that email.';
+      else if (code === 'auth/wrong-password')     msg = 'Incorrect password.';
+      else if (code === 'auth/invalid-credential') msg = 'Incorrect email or password.';
+      else if (code === 'auth/operation-not-allowed') msg = 'Email sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.';
+      else if (code === 'auth/network-request-failed') msg = 'Network error. Check your internet connection.';
+      else if (code === 'auth/too-many-requests')  msg = 'Too many attempts. Please wait and try again.';
+      else if (code === 'auth/internal-error')     msg = 'Firebase internal error. Check the browser console.';
+      else msg = (err.message || 'Unknown error.').replace('Firebase: ','').replace(/\s*\(auth\/[^)]+\)\.?/,'').trim() || 'Something went wrong.';
       $('auth-error').textContent = msg;
     } finally {
       setLoading('auth-submit', false);
