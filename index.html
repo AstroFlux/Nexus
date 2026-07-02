@@ -379,6 +379,11 @@ function renderApp() {
         <!-- Chat header -->
         <div id="chat-header">
           <div id="chat-user-info">
+            <button id="back-btn" title="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
             <div id="chat-avatar"></div>
             <div>
               <div id="chat-username"></div>
@@ -463,6 +468,12 @@ async function openConv(cid, otherUser) {
   $('empty-main').style.display  = 'none';
   $('chat-panel').style.display  = 'flex';
 
+  /* Mobile: slide main into view, hide sidebar */
+  if (window.innerWidth <= 680) {
+    $('sidebar').classList.add('hidden');
+    $('main').classList.add('visible');
+  }
+
   $('chat-avatar').innerHTML      = avatar(otherUser.displayName, 38);
   $('chat-username').textContent  = otherUser.displayName;
   if (otherUser.displayName === 'ASTRO') {
@@ -524,6 +535,12 @@ function refreshSidebar() { /* onSnapshot handles this */ }
    BIND APP EVENTS
 ──────────────────────────────────────────── */
 function bindAppEvents() {
+  /* back button — mobile only */
+  $('back-btn').addEventListener('click', () => {
+    $('sidebar').classList.remove('hidden');
+    $('main').classList.remove('visible');
+  });
+
   /* logout */
   $('logout-btn').addEventListener('click', async () => {
     await logOut();
@@ -969,10 +986,44 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
 /* ── Mobile ── */
 @media(max-width:680px){
-  #sidebar{width:100%;position:absolute;z-index:10;transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
-  #sidebar.open{transform:translateX(0)}
+  #app-screen{position:relative;overflow:hidden}
+
+  /* Sidebar takes full screen on mobile */
+  #sidebar{
+    width:100%;height:100%;
+    position:absolute;z-index:10;
+    transform:translateX(0);
+    transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  #sidebar.hidden{transform:translateX(-100%)}
+
+  /* Main also full screen, hidden behind sidebar by default */
+  #main{
+    position:absolute;width:100%;height:100%;
+    transform:translateX(100%);
+    transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  #main.visible{transform:translateX(0)}
+
   .msg-col{max-width:82%}
+
+  /* Show back button on mobile */
+  #back-btn{display:flex!important}
+
+  /* Composer padding */
+  #composer{padding:10px 12px}
+  #messages-wrap{padding:14px 12px}
+  .chat-hd, #chat-header{padding:11px 14px}
 }
+/* Back button — mobile only */
+#back-btn{
+  display:none;
+  background:none;border:none;color:var(--muted);
+  cursor:pointer;padding:6px;border-radius:6px;
+  align-items:center;justify-content:center;
+  margin-right:6px;transition:color 0.18s;
+}
+#back-btn:hover{color:var(--text)}
 </style>
 </head>
 <body>
