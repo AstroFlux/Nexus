@@ -171,15 +171,22 @@ function sendTypingSignal(convId) {
    AUTH
 ──────────────────────────────────────────── */
 async function signUp(email, password, displayName) {
+  // Step 1: create the Firebase Auth account
   const cred = await createUserWithEmailAndPassword(auth, email, password);
+  // Step 2: set display name on the auth profile
   await updateProfile(cred.user, { displayName });
-  await setDoc(doc(db, 'users', cred.user.uid), {
-    uid:         cred.user.uid,
-    displayName,
-    email,
-    createdAt:   serverTimestamp(),
-    online:      true
-  });
+  // Step 3: write user document to Firestore (non-fatal if rules block it)
+  try {
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      uid:         cred.user.uid,
+      displayName,
+      email,
+      createdAt:   serverTimestamp(),
+      online:      true
+    });
+  } catch(fsErr) {
+    console.warn('Firestore write failed (check rules):', fsErr.message);
+  }
 }
 
 async function logIn(email, password) {
@@ -199,7 +206,7 @@ async function logOut() {
 onAuthStateChanged(auth, async user => {
   if (user) {
     currentUser = user;
-    await updateDoc(doc(db, 'users', user.uid), { online: true }).catch(()=>{});
+    try { await updateDoc(doc(db, 'users', user.uid), { online: true }); } catch(e) {}
     initPubNub(user.uid);
     renderApp();
     showScreen('app-screen');
@@ -587,7 +594,8 @@ function renderSearchResults(users) {
 /* ────────────────────────────────────────────
    AUTH FORM EVENTS
 ──────────────────────────────────────────── */
-window.addEventListener('DOMContentLoaded', () => {
+/* bind auth UI — runs after module parses, DOM is ready */
+;(function bindAuth() {
   /* Tab switching */
   document.querySelectorAll('.auth-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -626,13 +634,21 @@ window.addEventListener('DOMContentLoaded', () => {
         toast('Account created!', 'success');
       }
     } catch(err) {
-      const msg = err.message.replace('Firebase: ','').replace(/\(auth.*\)\./,'').trim();
+      console.error('Auth error:', err);
+      let msg = err.message || 'Something went wrong.';
+      msg = msg.replace('Firebase: ','').replace(/\(auth\/[^)]+\)\.?/,'').trim();
+      if (err.code === 'auth/email-already-in-use') msg = 'Email already in use. Try signing in.';
+      if (err.code === 'auth/weak-password')        msg = 'Password must be at least 6 characters.';
+      if (err.code === 'auth/invalid-email')         msg = 'Invalid email address.';
+      if (err.code === 'auth/user-not-found')        msg = 'No account found with that email.';
+      if (err.code === 'auth/wrong-password')        msg = 'Incorrect password.';
+      if (err.code === 'auth/invalid-credential')    msg = 'Incorrect email or password.';
       $('auth-error').textContent = msg;
     } finally {
       setLoading('auth-submit', false);
     }
   });
-});
+})();
 </script>
 
 <!-- PubNub CDN -->
