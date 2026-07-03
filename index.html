@@ -256,26 +256,17 @@ function listenSidebar(){
 function listenMsgs(id){
   if(convUnsub){ convUnsub(); convUnsub=null; }
   const r=ref(db,'conversations/'+id+'/messages');
-  // seen tracks every key we have rendered — populated BEFORE DOM write to prevent races
-  const seen=new Set();
-  let firstLoad=true;
+  const rendered=new Set(); // keys already in DOM
 
-  const h=snap=>{
+  // Step 1: load existing messages once with get()
+  get(r).then(snap=>{
     const msgsEl=$('msgs'); if(!msgsEl) return;
-
-    // Build current map from snapshot
-    const current=new Map();
-    if(snap.exists()) snap.forEach(c=>current.set(c.key,c.val()));
-
-    if(firstLoad){
-      firstLoad=false;
-      // Populate seen FIRST before touching DOM
-      current.forEach((_,k)=>seen.add(k));
-      // Full render
-      msgsEl.innerHTML='';
-      let lastD='';
-      current.forEach((val,key)=>{
-        const m={...val,_key:key};
+    msgsEl.innerHTML='';
+    let lastD='';
+    if(snap.exists()){
+      snap.forEach(c=>{
+        const m={...c.val(),_key:c.key};
+        rendered.add(m._key);
         const ds=fmtDate(m.ts);
         if(ds!==lastD){
           const sep=mk('div'); sep.className='date-sep';
@@ -284,37 +275,44 @@ function listenMsgs(id){
         }
         appendMsg(m,false);
       });
-      scrollMsgs();
-      return;
     }
+    scrollMsgs();
 
-    // Incremental update — only diff
-    // Remove deleted
-    seen.forEach(k=>{
-      if(!current.has(k)){
-        document.querySelector(`.msg-row[data-key="${k}"]`)?.remove();
-        seen.delete(k);
-      }
-    });
-    // Add new
-    current.forEach((val,key)=>{
-      if(seen.has(key)) return; // already rendered, skip
-      seen.add(key);
-      const m={...val,_key:key};
-      const ds=fmtDate(m.ts);
-      const lastSep=msgsEl.querySelector('.date-sep:last-of-type span');
-      if(!lastSep||lastSep.textContent!==ds){
-        const sep=mk('div'); sep.className='date-sep';
-        sep.innerHTML=`<span>${ds}</span>`;
-        msgsEl.appendChild(sep);
-      }
-      appendMsg(m,true);
-      scrollMsgs();
-    });
-  };
+    // Step 2: after initial load, watch for changes
+    // Use onValue but ONLY process keys not already rendered
+    const h=snap2=>{
+      const msgsEl2=$('msgs'); if(!msgsEl2) return;
+      const current=new Map();
+      if(snap2.exists()) snap2.forEach(c=>current.set(c.key,c.val()));
 
-  onValue(r,h);
-  convUnsub=()=>off(r,'value',h);
+      // Handle deletions
+      rendered.forEach(k=>{
+        if(!current.has(k)){
+          document.querySelector(`.msg-row[data-key="${k}"]`)?.remove();
+          rendered.delete(k);
+        }
+      });
+
+      // Handle new messages only
+      current.forEach((val,key)=>{
+        if(rendered.has(key)) return;
+        rendered.add(key);
+        const m={...val,_key:key};
+        const ds=fmtDate(m.ts);
+        const lastSep=msgsEl2.querySelector('.date-sep:last-of-type span');
+        if(!lastSep||lastSep.textContent!==ds){
+          const sep=mk('div'); sep.className='date-sep';
+          sep.innerHTML=`<span>${ds}</span>`;
+          msgsEl2.appendChild(sep);
+        }
+        appendMsg(m,true);
+        scrollMsgs();
+      });
+    };
+
+    onValue(r,h);
+    convUnsub=()=>off(r,'value',h);
+  }).catch(e=>console.error('load msgs:',e));
 }
 
 async function sendMsg(text){
@@ -492,7 +490,6 @@ function renderConvs(list){
    OPEN CONVERSATION
 ════════════════════════════════ */
 function openConv(id,other){
-  if(activeCid===id) return; // already open, don't re-init listeners
   activeCid=id; activeOther=other;
   const ep=$('empty-main'), cp=$('chat-panel');
   if(ep) ep.style.display='none';
