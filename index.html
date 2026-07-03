@@ -97,13 +97,13 @@ function modal(html, onClose){
 /* ── Confirm dialog ── */
 function confirm(msg, onYes){
   const {el,close} = modal(`
-    <button class="modal-close">✕</button>
-    <p style="margin-bottom:18px;font-size:0.9rem;color:var(--text)">${esc(msg)}</p>
+    <p style="margin-bottom:20px;font-size:0.9rem;color:var(--text);line-height:1.5">${esc(msg)}</p>
     <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn-ghost modal-close">Cancel</button>
+      <button class="btn-ghost" id="confirm-no">Cancel</button>
       <button class="btn-danger" id="confirm-yes">Delete</button>
     </div>`);
   el.querySelector('#confirm-yes').addEventListener('click',()=>{ close(); onYes(); });
+  el.querySelector('#confirm-no').addEventListener('click',()=>{ close(); });
 }
 
 /* ── PubNub ── */
@@ -112,8 +112,7 @@ function initPN(uid){
   pn = new PubNub({ publishKey:PUBNUB_PUBLISH_KEY, subscribeKey:PUBNUB_SUBSCRIBE_KEY, uuid:uid });
   pn.addListener({
     presence(ev){
-      if(!activeOther) return;
-      if(ev.channel===`user.${activeOther.uid}`){ setOnline(ev.action==='join'||ev.occupancy>0); }
+      // Presence handled via Firebase Realtime Database for accuracy
     },
     signal(ev){
       if(!activeCid||ev.channel!==`conv.${activeCid}`) return;
@@ -137,9 +136,14 @@ async function signUp(email,pass,name){
 }
 async function logIn(e,p){ await signInWithEmailAndPassword(auth,e,p); }
 async function logOut(){
-  if(me) update(ref(db,'users/'+me.uid),{online:false}).catch(()=>{});
+  if(me) await update(ref(db,'users/'+me.uid),{online:false}).catch(()=>{});
   await signOut(auth);
 }
+
+// Mark offline when tab closes
+window.addEventListener('beforeunload',()=>{
+  if(me) update(ref(db,'users/'+me.uid),{online:false}).catch(()=>{});
+});
 
 /* ── Auth state ── */
 onAuthStateChanged(auth, user=>{
@@ -360,7 +364,11 @@ function buildApp(){
         </div>
       </div>
       <div id="composer">
-        <div id="composer-in">
+        <div id="emoji-panel" style="display:none"></div>
+      <div id="composer-in">
+          <button class="icon-btn" id="emoji-btn" style="flex-shrink:0;padding:5px 6px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </button>
           <textarea id="msg-inp" placeholder="Message…" rows="1"></textarea>
           <button id="send-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -427,6 +435,13 @@ async function openConv(id,other){
   listenMsgs(id);
   document.querySelectorAll('.conv-item').forEach(i=>i.classList.toggle('conv-active',i.dataset.cid===id));
   $('msg-inp').focus();
+  // Listen to other user's real online status from Firebase
+  const prevOnlineUnsub = window._onlineUnsub;
+  if(prevOnlineUnsub) prevOnlineUnsub();
+  const onlineRef=ref(db,'users/'+other.uid+'/online');
+  const onlineH=snap=>setOnline(snap.val()===true);
+  onValue(onlineRef,onlineH);
+  window._onlineUnsub=()=>off(onlineRef,'value',onlineH);
 }
 
 /* ── Append message ── */
@@ -470,7 +485,7 @@ function bindApp(){
   $('edit-name-btn').addEventListener('click',()=>{
     const {el,close}=modal(`
       <button class="modal-close">✕</button>
-      <h3 style="margin-bottom:16px;font-size:1rem;font-weight:700">Change display name</h3>
+      <h3 style="margin-bottom:16px;font-size:1rem;font-weight:700;padding-right:24px">Change display name</h3>
       <input id="new-name-inp" class="modal-inp" type="text" placeholder="New name…" value="${esc(me.displayName||'')}"/>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
         <button class="btn-ghost modal-close">Cancel</button>
@@ -498,6 +513,16 @@ function bindApp(){
     if(!v){$('search-res').innerHTML='';return;}
     st=setTimeout(async()=>{ renderSearch(await searchUsers(v)); },300);
   });
+
+  /* Emoji picker */
+  const EMOJIS=['😀','😂','😍','🥰','😎','🤔','😢','😡','🤩','🥳','👍','👎','❤️','🔥','✨','💯','🎉','🚀','💀','😭','🙏','💪','👀','🤣','😅','😬','🤦','🤷','💬','⚡','🌙','⭐','💜','🖤','🤍','😏','🫡','🫠','💅','🧠'];
+  const ep=$('emoji-panel');
+  ep.innerHTML=EMOJIS.map(e=>`<button class="em-btn" data-em="${e}">${e}</button>`).join('');
+  ep.querySelectorAll('.em-btn').forEach(b=>b.addEventListener('click',()=>{
+    const inp=$('msg-inp'); inp.value+=b.dataset.em; inp.focus(); ep.style.display='none';
+  }));
+  $('emoji-btn').addEventListener('click',e=>{ e.stopPropagation(); ep.style.display=ep.style.display==='none'?'flex':'none'; });
+  document.addEventListener('click',e=>{ if(!ep.contains(e.target)&&e.target.id!=='emoji-btn') ep.style.display='none'; });
 
   /* Send */
   $('send-btn').addEventListener('click',doSend);
@@ -632,7 +657,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .modal-ov.show{opacity:1}
 .modal-box{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:28px 28px 24px;width:100%;max-width:380px;position:relative;transform:translateY(12px);transition:transform .25s cubic-bezier(.16,1,.3,1)}
 .modal-ov.show .modal-box{transform:none}
-.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;border-radius:6px;transition:color .16s}
+.modal-close{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px 7px;border-radius:6px;transition:color .16s;line-height:1;z-index:1}
 .modal-close:hover{color:var(--text)}
 .modal-inp{width:100%;background:rgba(5,5,8,.7);border:1px solid var(--bd2);border-radius:var(--rs);padding:11px 13px;color:var(--text);font-family:var(--f);font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s}
 .modal-inp:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(138,43,226,.12)}
@@ -765,11 +790,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 @keyframes tb{0%,60%,100%{transform:translateY(0);background:var(--muted)}30%{transform:translateY(-5px);background:var(--ac2)}}
 
 /* Composer */
-#composer{padding:12px 18px;background:rgba(7,7,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bd);flex-shrink:0}
+#composer{padding:12px 18px;background:rgba(7,7,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bd);flex-shrink:0;position:relative}
 #composer-in{display:flex;align-items:flex-end;gap:8px;background:var(--s2);border:1px solid var(--bd2);border-radius:13px;padding:6px 6px 6px 14px;transition:border-color .2s,box-shadow .2s}
 #composer-in:focus-within{border-color:rgba(138,43,226,.38);box-shadow:0 0 0 3px rgba(138,43,226,.08)}
 #msg-inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--f);font-size:.86rem;line-height:1.5;resize:none;padding:5px 0;max-height:120px;overflow-y:auto}
 #msg-inp::placeholder{color:var(--muted)}
+#emoji-panel{position:absolute;bottom:72px;left:14px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:10px;display:flex;flex-wrap:wrap;gap:4px;width:260px;max-height:160px;overflow-y:auto;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:fadeUp .18s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.em-btn{width:32px;height:32px;background:none;border:none;font-size:1.1rem;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.em-btn:hover{background:var(--s2)}
 #send-btn{width:34px;height:34px;flex-shrink:0;border:none;border-radius:9px;background:linear-gradient(135deg,#6b1abf,var(--ac2));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(138,43,226,.4);transition:transform .14s,box-shadow .18s}
 #send-btn:hover{transform:scale(1.08);box-shadow:0 5px 20px rgba(138,43,226,.55)}
 #send-btn:active{transform:scale(.9)}
