@@ -32,25 +32,25 @@ const firebaseConfig = {
   appId:"1:233723930326:web:8560a2e9e40e722ebd0b77"
 };
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getDatabase(app);
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = getDatabase(fbApp);
 
 /* ── State ── */
-let me = null, pn = null, activeCid = null, activeOther = null;
-let typingTimer = null, convUnsub = null, sidebarUnsub = null;
+let me=null, pn=null, activeCid=null, activeOther=null;
+let typingTimer=null, convUnsub=null, sidebarUnsub=null, onlineUnsub=null;
 
-/* ── Helpers ── */
-const $ = id => document.getElementById(id);
+/* ── DOM helpers ── */
+const $  = id  => document.getElementById(id);
 const mk = tag => document.createElement(tag);
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const s = $(id); if (s) s.classList.add('active');
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const s=$(id); if(s) s.classList.add('active');
 }
 
-function toast(msg, type='info') {
-  const t = mk('div'); t.className=`toast toast-${type}`; t.textContent=msg;
+function toast(msg,type='info'){
+  const t=mk('div'); t.className=`toast toast-${type}`; t.textContent=msg;
   $('toasts').appendChild(t);
   requestAnimationFrame(()=>t.classList.add('show'));
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),350);},3000);
@@ -60,12 +60,11 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 function fmt(ts){
   if(!ts) return '';
-  const d=new Date(ts);
-  return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
 function fmtDate(ts){
   if(!ts) return 'Today';
-  const d=new Date(ts), now=new Date();
+  const d=new Date(ts),now=new Date();
   if(d.toDateString()===now.toDateString()) return 'Today';
   const y=new Date(now); y.setDate(now.getDate()-1);
   if(d.toDateString()===y.toDateString()) return 'Yesterday';
@@ -79,41 +78,46 @@ function av(name,size=36){
 }
 
 function devBadge(name){ return name==='ASTRO'?'<span class="dev-tag">DEV</span>':''; }
+function convId(a,b){ return [a,b].sort().join('_'); }
 
-function cid(a,b){ return [a,b].sort().join('_'); }
-
-/* ── Modal ── */
-function modal(html, onClose){
+/* ════════════════════════════════
+   MODAL — no absolute X button,
+   clean Cancel/action layout
+════════════════════════════════ */
+function openModal(html, onClose){
   const ov=mk('div'); ov.className='modal-ov';
   ov.innerHTML=`<div class="modal-box">${html}</div>`;
   document.body.appendChild(ov);
   requestAnimationFrame(()=>ov.classList.add('show'));
-  const close=()=>{ ov.classList.remove('show'); setTimeout(()=>ov.remove(),250); if(onClose) onClose(); };
+  const close=()=>{
+    ov.classList.remove('show');
+    setTimeout(()=>ov.remove(),250);
+    if(onClose) onClose();
+  };
   ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
-  ov.querySelector('.modal-close')?.addEventListener('click', close);
-  return { el:ov, close };
+  // bind every element with data-close
+  ov.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',close));
+  return {el:ov,close};
 }
 
-/* ── Confirm dialog ── */
-function confirm(msg, onYes){
-  const {el,close} = modal(`
-    <p style="margin-bottom:20px;font-size:0.9rem;color:var(--text);line-height:1.5">${esc(msg)}</p>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn-ghost" id="confirm-no">Cancel</button>
-      <button class="btn-danger" id="confirm-yes">Delete</button>
+/* Confirm — no floating X, just two buttons */
+function confirmDialog(msg, onYes){
+  const {el,close}=openModal(`
+    <div class="modal-title">${esc(msg)}</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-close>Cancel</button>
+      <button class="btn-danger" id="yes-btn">Delete</button>
     </div>`);
-  el.querySelector('#confirm-yes').addEventListener('click',()=>{ close(); onYes(); });
-  el.querySelector('#confirm-no').addEventListener('click',()=>{ close(); });
+  el.querySelector('#yes-btn').addEventListener('click',()=>{ close(); onYes(); });
 }
 
-/* ── PubNub ── */
+/* ════════════════════════════════
+   PUBNUB
+════════════════════════════════ */
 function initPN(uid){
   if(pn){ try{pn.unsubscribeAll();}catch(e){} }
-  pn = new PubNub({ publishKey:PUBNUB_PUBLISH_KEY, subscribeKey:PUBNUB_SUBSCRIBE_KEY, uuid:uid });
+  pn=new PubNub({publishKey:PUBNUB_PUBLISH_KEY,subscribeKey:PUBNUB_SUBSCRIBE_KEY,uuid:uid});
   pn.addListener({
-    presence(ev){
-      // Presence handled via Firebase Realtime Database for accuracy
-    },
     signal(ev){
       if(!activeCid||ev.channel!==`conv.${activeCid}`) return;
       if(ev.message==='typing'&&ev.publisher!==me.uid){
@@ -123,12 +127,16 @@ function initPN(uid){
       }
     }
   });
-  pn.subscribe({channels:[`user.${uid}`],withPresence:true});
+  pn.subscribe({channels:[`user.${uid}`],withPresence:false});
 }
 
-function typing(){ if(pn&&activeCid) pn.signal({channel:`conv.${activeCid}`,message:'typing'}).catch(()=>{}); }
+function sendTyping(){
+  if(pn&&activeCid) pn.signal({channel:`conv.${activeCid}`,message:'typing'}).catch(()=>{});
+}
 
-/* ── Auth ── */
+/* ════════════════════════════════
+   AUTH
+════════════════════════════════ */
 async function signUp(email,pass,name){
   const c=await createUserWithEmailAndPassword(auth,email,pass);
   await updateProfile(c.user,{displayName:name});
@@ -140,48 +148,99 @@ async function logOut(){
   await signOut(auth);
 }
 
-// Mark offline when tab closes
 window.addEventListener('beforeunload',()=>{
   if(me) update(ref(db,'users/'+me.uid),{online:false}).catch(()=>{});
 });
 
-/* ── Auth state ── */
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth,user=>{
   if(user){
     me=user;
-    update(ref(db,'users/'+user.uid),{uid:user.uid,displayName:user.displayName||user.email.split('@')[0],email:user.email,online:true}).catch(()=>{});
+    // Set online and register auto-offline on disconnect
+    const userRef=ref(db,'users/'+user.uid);
+    const connRef=ref(db,'.info/connected');
+    onValue(connRef,snap=>{
+      if(snap.val()===true){
+        // When connection drops, set offline automatically
+        import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js')
+          .then(({onDisconnect})=>{
+            onDisconnect(ref(db,'users/'+user.uid+'/online')).set(false);
+          }).catch(()=>{});
+        update(userRef,{
+          uid:user.uid,
+          displayName:user.displayName||user.email.split('@')[0],
+          email:user.email,
+          online:true
+        }).catch(()=>{});
+      }
+    });
     try{initPN(user.uid);}catch(e){}
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{buildApp();showScreen('app');});
-    else { buildApp(); showScreen('app'); }
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',()=>{buildApp();showScreen('app');});
+    } else {
+      buildApp(); showScreen('app');
+    }
   } else {
     me=null;
     if(pn){try{pn.unsubscribeAll();}catch(e){} pn=null;}
-    if(convUnsub){convUnsub();convUnsub=null;}
-    if(sidebarUnsub){sidebarUnsub();sidebarUnsub=null;}
+    stopListeners();
     showScreen('auth');
   }
 });
 
-/* ── User search ── */
+function stopListeners(){
+  if(convUnsub){convUnsub();convUnsub=null;}
+  if(sidebarUnsub){sidebarUnsub();sidebarUnsub=null;}
+  if(onlineUnsub){onlineUnsub();onlineUnsub=null;}
+}
+
+/* ════════════════════════════════
+   USERS
+════════════════════════════════ */
 async function searchUsers(term){
-  const snap=await get(ref(db,'users')); const res=[];
+  const snap=await get(ref(db,'users'));
+  const res=[];
   if(!snap.exists()) return res;
-  snap.forEach(c=>{ const u=c.val(); if(u.uid===me.uid) return;
-    if((u.displayName||'').toLowerCase().includes(term.toLowerCase())||(u.email||'').toLowerCase().includes(term.toLowerCase())) res.push(u); });
+  snap.forEach(c=>{
+    const u=c.val();
+    if(u.uid===me.uid) return;
+    const n=(u.displayName||'').toLowerCase();
+    const em=(u.email||'').toLowerCase();
+    const t=term.toLowerCase();
+    if(n.includes(t)||em.includes(t)) res.push(u);
+  });
   return res;
 }
 
-/* ── Conversations ── */
+async function changeDisplayName(newName){
+  newName=newName.trim();
+  if(!newName) return;
+  await updateProfile(me,{displayName:newName});
+  await update(ref(db,'users/'+me.uid),{displayName:newName});
+  me=auth.currentUser;
+  const pEl=$('profile-name');
+  if(pEl) pEl.innerHTML=esc(newName)+devBadge(newName);
+  toast('Name updated!','success');
+}
+
+/* ════════════════════════════════
+   CONVERSATIONS
+════════════════════════════════ */
 async function getOrCreate(other){
-  const id=cid(me.uid,other.uid);
+  const id=convId(me.uid,other.uid);
   const snap=await get(ref(db,'conversations/'+id));
-  if(!snap.exists()) await set(ref(db,'conversations/'+id),{id,participants:[me.uid,other.uid],
-    participantNames:{[me.uid]:me.displayName,[other.uid]:other.displayName},lastMessage:'',lastTs:Date.now(),createdAt:Date.now()});
+  if(!snap.exists()){
+    await set(ref(db,'conversations/'+id),{
+      id,
+      participants:[me.uid,other.uid],
+      participantNames:{[me.uid]:me.displayName,[other.uid]:other.displayName},
+      lastMessage:'',lastTs:Date.now(),createdAt:Date.now()
+    });
+  }
   return id;
 }
 
 function listenSidebar(){
-  if(sidebarUnsub){off(ref(db,'conversations'));sidebarUnsub=null;}
+  if(sidebarUnsub){ sidebarUnsub(); sidebarUnsub=null; }
   const r=ref(db,'conversations');
   const h=snap=>{
     const list=[];
@@ -189,99 +248,87 @@ function listenSidebar(){
     list.sort((a,b)=>(b.lastTs||0)-(a.lastTs||0));
     renderConvs(list);
   };
-  onValue(r,h); sidebarUnsub=()=>off(r,'value',h);
+  onValue(r,h);
+  sidebarUnsub=()=>off(r,'value',h);
 }
 
+/* ── Message listener ── */
 function listenMsgs(id){
-  if(convUnsub){convUnsub();convUnsub=null;}
+  if(convUnsub){ convUnsub(); convUnsub=null; }
   const r=ref(db,'conversations/'+id+'/messages');
-  // onValue does a full re-render each time = duplicates on send.
-  // Fix: render once on first snapshot, then use child events for live updates.
-  let initialDone=false;
-
-  const fullH=snap=>{
-    if(initialDone) return; // ignore subsequent full snapshots
-    initialDone=true;
-    const el=$('msgs'); if(!el) return;
-    el.innerHTML=''; let lastD='';
-    if(snap.exists()){
-      snap.forEach(c=>{
-        const m={...c.val(),_key:c.key};
-        const ds=fmtDate(m.ts);
-        if(ds!==lastD){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); lastD=ds; }
-        appendMsg(m);
-      });
-    }
-    scrollMsgs();
-  };
-
-  // child_added fires for existing + new children
-  // We use it only AFTER the initial onValue has painted everything
-  const addH=snap2=>{
-    if(!initialDone) return; // wait for initial render
-    const m={...snap2.val(),_key:snap2.key};
-    if(document.querySelector(`.msg-row[data-key="${m._key}"]`)) return; // already rendered
-    const el=$('msgs'); if(!el) return;
-    const ds=fmtDate(m.ts);
-    const lastSepTxt=el.querySelector('.date-sep:last-of-type span')?.textContent;
-    if(ds!==lastSepTxt){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); }
-    appendMsg(m); scrollMsgs();
-  };
-
-  const remH=snap2=>{
-    document.querySelector(`.msg-row[data-key="${snap2.key}"]`)?.remove();
-  };
-
-  onValue(r,fullH,{onlyOnce:true});
-  const u1=onValue(ref(db,'conversations/'+id+'/messages'),()=>{}); // keep connection
-  // use raw on() for child events via the imported functions
-  // Actually use onValue child simulation via the existing `onValue` + tracking
-  // Simpler: just re-use onValue but guard against duplicates with a Set
+  // seen tracks every key we have rendered — populated BEFORE DOM write to prevent races
   const seen=new Set();
-  const mainH=snap=>{
-    const el=$('msgs'); if(!el) return;
-    if(!initialDone){
-      initialDone=true;
-      el.innerHTML=''; let lastD='';
-      if(snap.exists()) snap.forEach(c=>{
-        const m={...c.val(),_key:c.key}; seen.add(m._key);
+  let firstLoad=true;
+
+  const h=snap=>{
+    const msgsEl=$('msgs'); if(!msgsEl) return;
+
+    // Build current map from snapshot
+    const current=new Map();
+    if(snap.exists()) snap.forEach(c=>current.set(c.key,c.val()));
+
+    if(firstLoad){
+      firstLoad=false;
+      // Populate seen FIRST before touching DOM
+      current.forEach((_,k)=>seen.add(k));
+      // Full render
+      msgsEl.innerHTML='';
+      let lastD='';
+      current.forEach((val,key)=>{
+        const m={...val,_key:key};
         const ds=fmtDate(m.ts);
-        if(ds!==lastD){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); lastD=ds; }
-        appendMsg(m);
+        if(ds!==lastD){
+          const sep=mk('div'); sep.className='date-sep';
+          sep.innerHTML=`<span>${ds}</span>`;
+          msgsEl.appendChild(sep); lastD=ds;
+        }
+        appendMsg(m,false);
       });
       scrollMsgs();
-    } else {
-      // Only process new/removed keys
-      const current=new Set();
-      if(snap.exists()) snap.forEach(c=>current.add(c.key));
-      // Remove deleted
-      seen.forEach(k=>{ if(!current.has(k)){ document.querySelector(`.msg-row[data-key="${k}"]`)?.remove(); seen.delete(k); } });
-      // Add new
-      if(snap.exists()) snap.forEach(c=>{
-        if(!seen.has(c.key)){
-          seen.add(c.key);
-          const m={...c.val(),_key:c.key};
-          const ds=fmtDate(m.ts);
-          const lastSepTxt=el.querySelector('.date-sep:last-of-type span')?.textContent;
-          if(ds!==lastSepTxt){ const sep=mk('div'); sep.className='date-sep'; sep.innerHTML=`<span>${ds}</span>`; el.appendChild(sep); }
-          appendMsg(m); scrollMsgs();
-        }
-      });
+      return;
     }
+
+    // Incremental update — only diff
+    // Remove deleted
+    seen.forEach(k=>{
+      if(!current.has(k)){
+        document.querySelector(`.msg-row[data-key="${k}"]`)?.remove();
+        seen.delete(k);
+      }
+    });
+    // Add new
+    current.forEach((val,key)=>{
+      if(seen.has(key)) return; // already rendered, skip
+      seen.add(key);
+      const m={...val,_key:key};
+      const ds=fmtDate(m.ts);
+      const lastSep=msgsEl.querySelector('.date-sep:last-of-type span');
+      if(!lastSep||lastSep.textContent!==ds){
+        const sep=mk('div'); sep.className='date-sep';
+        sep.innerHTML=`<span>${ds}</span>`;
+        msgsEl.appendChild(sep);
+      }
+      appendMsg(m,true);
+      scrollMsgs();
+    });
   };
-  onValue(r,mainH);
-  convUnsub=()=>off(r,'value',mainH);
+
+  onValue(r,h);
+  convUnsub=()=>off(r,'value',h);
 }
 
 async function sendMsg(text){
   if(!activeCid||!text.trim()) return;
-  const msg={uid:me.uid,sender:me.displayName,text:text.trim(),ts:Date.now()};
-  await push(ref(db,'conversations/'+activeCid+'/messages'),msg);
-  await update(ref(db,'conversations/'+activeCid),{lastMessage:text.trim().slice(0,80),lastTs:Date.now()});
+  await push(ref(db,'conversations/'+activeCid+'/messages'),{
+    uid:me.uid, sender:me.displayName, text:text.trim(), ts:Date.now()
+  });
+  await update(ref(db,'conversations/'+activeCid),{
+    lastMessage:text.trim().slice(0,80), lastTs:Date.now()
+  });
 }
 
-async function deleteMsg(convId,key){
-  await remove(ref(db,'conversations/'+convId+'/messages/'+key));
+async function deleteMsg(cid,key){
+  await remove(ref(db,'conversations/'+cid+'/messages/'+key));
 }
 
 async function deleteConv(id){
@@ -289,25 +336,38 @@ async function deleteConv(id){
   if(activeCid===id){ activeCid=null; activeOther=null; showEmpty(); }
 }
 
-/* ── Change display name ── */
-async function changeDisplayName(newName){
-  newName=newName.trim();
-  if(!newName) return;
-  await updateProfile(me,{displayName:newName});
-  await update(ref(db,'users/'+me.uid),{displayName:newName});
-  me = auth.currentUser;
-  // Refresh sidebar profile name
-  const pn2=$('profile-name'); if(pn2) pn2.innerHTML=esc(newName)+devBadge(newName);
-  toast('Name updated!','success');
+/* ════════════════════════════════
+   ONLINE PRESENCE — Firebase only
+════════════════════════════════ */
+function watchOnline(uid){
+  if(onlineUnsub){ onlineUnsub(); onlineUnsub=null; }
+  // Watch the other user's online field in Firebase
+  const r=ref(db,'users/'+uid+'/online');
+  const h=snap=>{
+    // Only show Online if the value is explicitly true
+    const isOnline=snap.exists()&&snap.val()===true;
+    setOnlineUI(isOnline);
+  };
+  onValue(r,h);
+  onlineUnsub=()=>off(r,'value',h);
 }
 
-/* ── BUILD APP ── */
+function setOnlineUI(on){
+  const t=$('chat-status-txt');
+  const d=document.querySelector('#chat-sub .dot');
+  if(t) t.textContent=on?'Online':'Offline';
+  if(d){ d.style.background=on?'var(--green)':'var(--muted)'; d.style.boxShadow=on?'0 0 5px var(--green)':'none'; }
+}
+
+/* ════════════════════════════════
+   BUILD APP SHELL
+════════════════════════════════ */
 function buildApp(){
   $('app').innerHTML=`
   <aside id="sidebar">
     <div id="sb-top">
       <div id="profile-row">
-        <div id="profile-av">${av(me.displayName,40)}</div>
+        ${av(me.displayName,40)}
         <div id="profile-mid">
           <div id="profile-name">${esc(me.displayName)}${devBadge(me.displayName)}</div>
           <div id="profile-status"><span class="dot green"></span>Online</div>
@@ -365,8 +425,8 @@ function buildApp(){
       </div>
       <div id="composer">
         <div id="emoji-panel" style="display:none"></div>
-      <div id="composer-in">
-          <button class="icon-btn" id="emoji-btn" style="flex-shrink:0;padding:5px 6px">
+        <div id="composer-in">
+          <button class="icon-btn" id="emoji-btn" title="Emoji">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
           </button>
           <textarea id="msg-inp" placeholder="Message…" rows="1"></textarea>
@@ -383,18 +443,24 @@ function buildApp(){
 }
 
 function showEmpty(){
-  $('empty-main').style.display='flex';
-  $('chat-panel').style.display='none';
+  const ep=$('empty-main'), cp=$('chat-panel');
+  if(ep) ep.style.display='flex';
+  if(cp) cp.style.display='none';
 }
 
-/* ── Render conv list ── */
+/* ════════════════════════════════
+   RENDER CONV LIST
+════════════════════════════════ */
 function renderConvs(list){
   const el=$('conv-list'); if(!el) return;
-  if(!list.length){ el.innerHTML='<div class="empty-hint">No conversations yet.<br/>Search for someone above.</div>'; return; }
+  if(!list.length){
+    el.innerHTML='<div class="empty-hint">No conversations yet.<br/>Search for someone above.</div>';
+    return;
+  }
   el.innerHTML=list.map(c=>{
-    const oid=c.participants.find(p=>p!==me.uid);
+    const oid=c.participants?.find(p=>p!==me.uid)||'';
     const oname=c.participantNames?.[oid]||'Unknown';
-    const last=c.lastMessage?esc(c.lastMessage.slice(0,40))+(c.lastMessage.length>40?'…':''):'No messages yet';
+    const last=c.lastMessage ? esc(c.lastMessage.slice(0,40))+(c.lastMessage.length>40?'…':'') : 'No messages yet';
     const active=c.id===activeCid?'conv-active':'';
     return `<div class="conv-item ${active}" data-cid="${c.id}" data-uid="${oid}" data-name="${esc(oname)}">
       ${av(oname,38)}
@@ -409,129 +475,145 @@ function renderConvs(list){
   }).join('');
 
   el.querySelectorAll('.conv-item').forEach(it=>{
-    it.addEventListener('click', e=>{
+    it.addEventListener('click',e=>{
       if(e.target.closest('.conv-del')) return;
       openConv(it.dataset.cid,{uid:it.dataset.uid,displayName:it.dataset.name});
     });
   });
   el.querySelectorAll('.conv-del').forEach(btn=>{
-    btn.addEventListener('click',e=>{ e.stopPropagation();
-      confirm('Delete this conversation? This cannot be undone.',()=>deleteConv(btn.dataset.cid));
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      confirmDialog('Delete this conversation? This cannot be undone.',()=>deleteConv(btn.dataset.cid));
     });
   });
 }
 
-/* ── Open conv ── */
-async function openConv(id,other){
+/* ════════════════════════════════
+   OPEN CONVERSATION
+════════════════════════════════ */
+function openConv(id,other){
+  if(activeCid===id) return; // already open, don't re-init listeners
   activeCid=id; activeOther=other;
-  $('empty-main').style.display='none';
-  $('chat-panel').style.display='flex';
-  if(window.innerWidth<=680){ $('sidebar').classList.add('hidden'); $('main').classList.add('visible'); }
+  const ep=$('empty-main'), cp=$('chat-panel');
+  if(ep) ep.style.display='none';
+  if(cp) cp.style.display='flex';
+  if(window.innerWidth<=680){
+    $('sidebar').classList.add('hidden');
+    $('main').classList.add('visible');
+  }
   $('chat-av').innerHTML=av(other.displayName,38);
   $('chat-name').innerHTML=esc(other.displayName)+devBadge(other.displayName);
   $('typing-name').textContent=other.displayName;
   $('msgs').innerHTML='';
-  pn?.subscribe({channels:[`conv.${id}`,`user.${other.uid}`],withPresence:true});
+  if(pn) pn.subscribe({channels:[`conv.${id}`],withPresence:false});
+  watchOnline(other.uid);
   listenMsgs(id);
   document.querySelectorAll('.conv-item').forEach(i=>i.classList.toggle('conv-active',i.dataset.cid===id));
   $('msg-inp').focus();
-  // Listen to other user's real online status from Firebase
-  const prevOnlineUnsub = window._onlineUnsub;
-  if(prevOnlineUnsub) prevOnlineUnsub();
-  const onlineRef=ref(db,'users/'+other.uid+'/online');
-  const onlineH=snap=>setOnline(snap.val()===true);
-  onValue(onlineRef,onlineH);
-  window._onlineUnsub=()=>off(onlineRef,'value',onlineH);
 }
 
-/* ── Append message ── */
-function appendMsg(m){
+/* ════════════════════════════════
+   APPEND MESSAGE
+════════════════════════════════ */
+function appendMsg(m, animate=true){
   const el=$('msgs'); if(!el) return;
   const own=m.uid===me.uid;
-  const w=mk('div'); w.className=`msg-row ${own?'msg-own':'msg-other'}`;
+  const w=mk('div');
+  w.className=`msg-row ${own?'msg-own':'msg-other'}`;
   w.dataset.key=m._key||'';
   w.innerHTML=`
     ${!own?`<div class="msg-av">${av(m.sender,28)}</div>`:''}
     <div class="msg-col">
       ${!own?`<div class="msg-meta"><span class="msg-auth">${esc(m.sender)}${devBadge(m.sender)}</span><span class="msg-ts">${fmt(m.ts)}</span></div>`:''}
-      <div class="bubble ${own?'bown':'bother'}">${esc(m.text).replace(/\n/g,'<br/>')}
-        ${own?`<button class="msg-del" data-key="${m._key||''}" title="Delete">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>`:''}
-      </div>
+      <div class="bubble ${own?'bown':'bother'}">${esc(m.text).replace(/\n/g,'<br/>')}${own?`<button class="msg-del" data-key="${m._key||''}" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}</div>
       ${own?`<div class="msg-ts-own">${fmt(m.ts)}</div>`:''}
     </div>`;
   el.appendChild(w);
-  if(own) w.querySelector('.msg-del')?.addEventListener('click',e=>{
-    e.stopPropagation();
-    deleteMsg(activeCid,e.currentTarget.dataset.key);
-  });
-  requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('msg-in')));
+  if(own){
+    w.querySelector('.msg-del')?.addEventListener('click',e=>{
+      e.stopPropagation();
+      deleteMsg(activeCid,e.currentTarget.dataset.key);
+    });
+  }
+  if(animate){
+    requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('msg-in')));
+  } else {
+    w.classList.add('msg-in');
+  }
 }
 
 function scrollMsgs(){ const w=$('msgs-wrap'); if(w) w.scrollTop=w.scrollHeight; }
-function setOnline(on){
-  const t=$('chat-status-txt'), d=document.querySelector('#chat-sub .dot');
-  if(t) t.textContent=on?'Online':'Offline';
-  if(d) d.style.background=on?'var(--green)':'var(--muted)';
-}
 
-/* ── Bind events ── */
+/* ════════════════════════════════
+   BIND APP EVENTS
+════════════════════════════════ */
 function bindApp(){
-  /* Back */
-  $('back-btn').addEventListener('click',()=>{ $('sidebar').classList.remove('hidden'); $('main').classList.remove('visible'); });
+  // Back button (mobile)
+  $('back-btn').addEventListener('click',()=>{
+    $('sidebar').classList.remove('hidden');
+    $('main').classList.remove('visible');
+  });
 
-  /* Edit name */
+  // Edit display name — no floating X, just a header row + buttons
   $('edit-name-btn').addEventListener('click',()=>{
-    const {el,close}=modal(`
-      <button class="modal-close">✕</button>
-      <h3 style="margin-bottom:16px;font-size:1rem;font-weight:700;padding-right:24px">Change display name</h3>
+    const {el,close}=openModal(`
+      <div class="modal-header">
+        <span class="modal-ttl">Change display name</span>
+        <button class="modal-x" data-close>✕</button>
+      </div>
       <input id="new-name-inp" class="modal-inp" type="text" placeholder="New name…" value="${esc(me.displayName||'')}"/>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
-        <button class="btn-ghost modal-close">Cancel</button>
+      <div class="modal-actions">
+        <button class="btn-ghost" data-close>Cancel</button>
         <button class="btn-primary" id="save-name-btn">Save</button>
       </div>`);
-    const inp=el.querySelector('#new-name-inp'); inp.focus(); inp.select();
+    const inp=el.querySelector('#new-name-inp');
+    inp.focus(); inp.select();
     el.querySelector('#save-name-btn').addEventListener('click',async()=>{ await changeDisplayName(inp.value); close(); });
     inp.addEventListener('keydown',async e=>{ if(e.key==='Enter'){ await changeDisplayName(inp.value); close(); } });
   });
 
-  /* Logout */
+  // Logout
   $('logout-btn').addEventListener('click',async()=>{ await logOut(); toast('Signed out.'); });
 
-  /* Delete conv from header */
+  // Delete conversation from header
   $('del-conv-btn').addEventListener('click',()=>{
     if(!activeCid) return;
-    confirm('Delete this entire conversation?',()=>deleteConv(activeCid));
+    confirmDialog('Delete this entire conversation?',()=>deleteConv(activeCid));
   });
 
-  /* Search */
+  // User search
   let st;
   $('search-inp').addEventListener('input',e=>{
     clearTimeout(st);
     const v=e.target.value.trim();
-    if(!v){$('search-res').innerHTML='';return;}
-    st=setTimeout(async()=>{ renderSearch(await searchUsers(v)); },300);
+    if(!v){ $('search-res').innerHTML=''; return; }
+    st=setTimeout(async()=>renderSearch(await searchUsers(v)),300);
   });
 
-  /* Emoji picker */
+  // Emoji picker
   const EMOJIS=['😀','😂','😍','🥰','😎','🤔','😢','😡','🤩','🥳','👍','👎','❤️','🔥','✨','💯','🎉','🚀','💀','😭','🙏','💪','👀','🤣','😅','😬','🤦','🤷','💬','⚡','🌙','⭐','💜','🖤','🤍','😏','🫡','🫠','💅','🧠'];
   const ep=$('emoji-panel');
   ep.innerHTML=EMOJIS.map(e=>`<button class="em-btn" data-em="${e}">${e}</button>`).join('');
   ep.querySelectorAll('.em-btn').forEach(b=>b.addEventListener('click',()=>{
     const inp=$('msg-inp'); inp.value+=b.dataset.em; inp.focus(); ep.style.display='none';
   }));
-  $('emoji-btn').addEventListener('click',e=>{ e.stopPropagation(); ep.style.display=ep.style.display==='none'?'flex':'none'; });
-  document.addEventListener('click',e=>{ if(!ep.contains(e.target)&&e.target.id!=='emoji-btn') ep.style.display='none'; });
+  $('emoji-btn').addEventListener('click',e=>{
+    e.stopPropagation();
+    ep.style.display=ep.style.display==='none'?'flex':'none';
+  });
+  document.addEventListener('click',e=>{
+    if(!ep.contains(e.target)&&e.target.id!=='emoji-btn') ep.style.display='none';
+  });
 
-  /* Send */
+  // Send
   $('send-btn').addEventListener('click',doSend);
   $('msg-inp').addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}
-    else{ clearTimeout(typingTimer); typingTimer=setTimeout(()=>typing(),400); }
+    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); doSend(); }
+    else{ clearTimeout(typingTimer); typingTimer=setTimeout(sendTyping,400); }
   });
   $('msg-inp').addEventListener('input',function(){
-    this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,120)+'px';
+    this.style.height='auto';
+    this.style.height=Math.min(this.scrollHeight,120)+'px';
   });
 }
 
@@ -544,7 +626,7 @@ async function doSend(){
 
 function renderSearch(users){
   const sr=$('search-res');
-  if(!users.length){sr.innerHTML='<div class="no-res">No users found.</div>';return;}
+  if(!users.length){ sr.innerHTML='<div class="no-res">No users found.</div>'; return; }
   sr.innerHTML=users.map(u=>`
     <div class="search-item" data-uid="${u.uid}" data-name="${esc(u.displayName)}">
       ${av(u.displayName,32)}
@@ -562,7 +644,9 @@ function renderSearch(users){
   });
 }
 
-/* ── Auth form ── */
+/* ════════════════════════════════
+   AUTH FORM
+════════════════════════════════ */
 ;(function(){
   document.querySelectorAll('.auth-tab').forEach(tab=>{
     tab.addEventListener('click',()=>{
@@ -591,14 +675,17 @@ function renderSearch(users){
     } catch(err){
       const c=err.code||'';
       let msg='Something went wrong.';
-      if(c==='auth/email-already-in-use') msg='Email already in use.';
-      else if(c==='auth/weak-password')   msg='Password must be 6+ characters.';
-      else if(c==='auth/invalid-email')   msg='Invalid email address.';
-      else if(c==='auth/invalid-credential') msg='Incorrect email or password.';
-      else if(c==='auth/too-many-requests')  msg='Too many attempts. Try later.';
+      if(c==='auth/email-already-in-use')  msg='Email already in use.';
+      else if(c==='auth/weak-password')     msg='Password must be 6+ characters.';
+      else if(c==='auth/invalid-email')     msg='Invalid email address.';
+      else if(c==='auth/invalid-credential')msg='Incorrect email or password.';
+      else if(c==='auth/too-many-requests') msg='Too many attempts. Try later.';
       else if(err.message) msg=err.message.replace('Firebase: ','').replace(/\s*\(auth\/[^)]+\)\.?/,'').trim();
       $('auth-err').textContent=msg;
-    } finally{ btn.disabled=false; btn.textContent=isLogin?'Sign In':'Create Account'; }
+    } finally{
+      btn.disabled=false;
+      btn.textContent=document.querySelector('.auth-tab.active').dataset.tab==='login'?'Sign In':'Create Account';
+    }
   });
 })();
 </script>
@@ -606,59 +693,50 @@ function renderSearch(users){
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#050508;
-  --s1:#0c0c14;
-  --s2:#12121e;
-  --bd:rgba(138,43,226,0.18);
-  --bd2:rgba(255,255,255,0.06);
-  --ac:#8a2be2;
-  --ac2:#a855f7;
-  --ac3:#c084fc;
-  --acg:rgba(138,43,226,0.14);
-  --text:#eeeef5;
-  --muted:#6b6b88;
-  --green:#39e08a;
-  --danger:#ff5f7a;
-  --f:'Inter',system-ui,sans-serif;
-  --r:14px;
-  --rs:9px;
+  --bg:#050508;--s1:#0c0c14;--s2:#12121e;
+  --bd:rgba(138,43,226,.18);--bd2:rgba(255,255,255,.06);
+  --ac:#8a2be2;--ac2:#a855f7;--ac3:#c084fc;
+  --text:#eeeef5;--muted:#6b6b88;--green:#39e08a;--danger:#ff5f7a;
+  --f:'Inter',system-ui,sans-serif;--r:14px;--rs:9px;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(138,43,226,0.22);border-radius:3px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(138,43,226,.22);border-radius:3px}
 
-/* ── screens ── */
 .screen{display:none;width:100%;height:100%}
 .screen.active{display:flex}
-
-/* ── canvas ── */
 #cv{position:fixed;inset:0;z-index:0;pointer-events:none}
 
-/* ── toasts ── */
+/* Toasts */
 #toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--rs);padding:10px 16px;font-size:0.8rem;font-weight:500;opacity:0;transform:translateX(20px);transition:all .28s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.toast{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--rs);padding:10px 16px;font-size:.8rem;font-weight:500;opacity:0;transform:translateX(20px);transition:all .28s cubic-bezier(.16,1,.3,1);pointer-events:none}
 .toast.show{opacity:1;transform:none}
 .toast-success{border-color:rgba(57,224,138,.3);color:var(--green)}
 .toast-error{border-color:rgba(255,95,122,.3);color:var(--danger)}
 
-/* ── avatar ── */
+/* Avatar */
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;letter-spacing:.02em;user-select:none}
 
-/* ── dev badge ── */
+/* DEV badge */
 .dev-tag{display:inline-flex;align-items:center;font-size:.56rem;font-weight:800;letter-spacing:.14em;color:var(--ac2);border:1px solid rgba(138,43,226,.4);border-radius:4px;padding:1px 5px;background:rgba(138,43,226,.1);margin-left:5px;text-transform:uppercase;user-select:none;vertical-align:middle}
 
-/* ── dot ── */
+/* Dot */
 .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .dot.green{background:var(--green);box-shadow:0 0 5px var(--green)}
 
-/* ── modal ── */
+/* ── MODAL — clean layout, no overlapping X ── */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9990;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .22s}
 .modal-ov.show{opacity:1}
-.modal-box{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:28px 28px 24px;width:100%;max-width:380px;position:relative;transform:translateY(12px);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.modal-box{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:24px;width:100%;max-width:360px;position:relative;transform:translateY(12px);transition:transform .25s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;gap:16px}
 .modal-ov.show .modal-box{transform:none}
-.modal-close{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px 7px;border-radius:6px;transition:color .16s;line-height:1;z-index:1}
-.modal-close:hover{color:var(--text)}
+/* header row with title + X side by side */
+.modal-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.modal-ttl{font-size:.95rem;font-weight:700;color:var(--text)}
+.modal-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:6px;line-height:1;transition:color .15s;flex-shrink:0;position:static}
+.modal-x:hover{color:var(--text)}
+/* confirm title — no header row needed */
+.modal-title{font-size:.88rem;color:var(--text);line-height:1.5}
+/* buttons row */
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
 .modal-inp{width:100%;background:rgba(5,5,8,.7);border:1px solid var(--bd2);border-radius:var(--rs);padding:11px 13px;color:var(--text);font-family:var(--f);font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s}
 .modal-inp:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(138,43,226,.12)}
 .btn-primary{padding:10px 18px;background:linear-gradient(130deg,#6b1abf,var(--ac2));border:none;border-radius:var(--rs);color:#fff;font-family:var(--f);font-size:.85rem;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .2s;box-shadow:0 3px 16px rgba(138,43,226,.4)}
@@ -669,7 +747,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .btn-danger{padding:10px 18px;background:rgba(255,95,122,.12);border:1px solid rgba(255,95,122,.35);border-radius:var(--rs);color:var(--danger);font-family:var(--f);font-size:.85rem;font-weight:700;cursor:pointer;transition:all .16s}
 .btn-danger:hover{background:rgba(255,95,122,.2)}
 
-/* ═══════════════════ AUTH ═══════════════════ */
+/* ── AUTH ── */
 #auth{align-items:center;justify-content:center;position:relative;z-index:1;padding:20px}
 .auth-box{width:100%;max-width:390px;background:rgba(9,9,15,.93);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(138,43,226,.22);border-radius:20px;padding:40px 36px;position:relative;overflow:hidden;animation:authIn .55s cubic-bezier(.16,1,.3,1) both;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(138,43,226,.05)}
 @keyframes authIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
@@ -695,14 +773,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #auth-submit:active{transform:scale(.97)}
 #auth-submit:disabled{opacity:.6;pointer-events:none}
 
-/* ═══════════════════ APP ═══════════════════ */
+/* ── APP ── */
 #app{flex-direction:row;z-index:1;position:relative;animation:fadeIn .4s ease both}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-/* ── Sidebar ── */
+/* Sidebar */
 #sidebar{width:270px;flex-shrink:0;background:rgba(7,7,12,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-right:1px solid var(--bd);display:flex;flex-direction:column;height:100vh;overflow:hidden}
 #sb-top{padding:14px 12px 10px;border-bottom:1px solid var(--bd2);flex-shrink:0}
-#profile-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--rs);margin-bottom:12px;cursor:default;transition:background .18s}
+#profile-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--rs);margin-bottom:12px;transition:background .18s}
 #profile-row:hover{background:var(--s1)}
 #profile-mid{flex:1;min-width:0}
 #profile-name{font-size:.85rem;font-weight:700;color:var(--text);display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -711,7 +789,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .16s;flex-shrink:0}
 .icon-btn:hover{background:var(--s2);color:var(--text)}
 .icon-btn.danger:hover{background:rgba(255,95,122,.1);color:var(--danger)}
-
 #search-wrap{position:relative;margin-bottom:8px}
 .search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
 #search-inp{width:100%;background:var(--s1);border:1px solid var(--bd2);border-radius:var(--rs);padding:9px 12px 9px 28px;color:var(--text);font-family:var(--f);font-size:.8rem;outline:none;transition:border-color .2s,box-shadow .2s}
@@ -724,11 +801,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .si-name{font-size:.82rem;font-weight:600;color:var(--text);display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .si-email{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .no-res{padding:8px;font-size:.76rem;color:var(--muted);text-align:center}
-
 #sb-mid{flex:1;overflow-y:auto;padding:10px 8px}
 .section-lbl{font-size:.62rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:0 6px;margin-bottom:8px}
 .empty-hint{font-size:.76rem;color:var(--muted);text-align:center;padding:22px 10px;line-height:1.7}
-
 .conv-item{display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--rs);cursor:pointer;transition:background .15s;position:relative}
 .conv-item:hover{background:var(--s1)}
 .conv-item:hover .conv-del{opacity:1}
@@ -738,33 +813,26 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .conv-last{font-size:.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .conv-del{opacity:0;transition:opacity .15s;padding:4px!important}
 
-/* ── Main ── */
+/* Main */
 #main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;background:var(--bg)}
 #empty-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted)}
 .empty-logo{font-size:3rem;font-weight:900;letter-spacing:-3px;color:var(--text)}
-.empty-logo .slash{background:linear-gradient(140deg,var(--ac3),var(--ac));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 10px rgba(138,43,226,.5));animation:sp 3s ease-in-out infinite}
+.empty-logo .slash{background:linear-gradient(140deg,var(--ac3),var(--ac));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:sp 3s ease-in-out infinite}
 @keyframes sp{0%,100%{filter:drop-shadow(0 0 8px rgba(138,43,226,.4))}50%{filter:drop-shadow(0 0 20px rgba(168,85,247,.9))}}
 #empty-main p{font-size:.82rem;text-align:center;max-width:260px}
-
 #chat-panel{flex:1;display:none;flex-direction:column;overflow:hidden}
-
-/* Chat header */
 #chat-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:rgba(7,7,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);flex-shrink:0}
 #chat-hd-l{display:flex;align-items:center;gap:10px}
 #chat-name{font-size:.88rem;font-weight:700;color:var(--text);display:flex;align-items:center}
 #chat-sub{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--green);margin-top:2px}
-
-/* Messages */
 #msgs-wrap{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:2px;scroll-behavior:smooth}
 .date-sep{display:flex;align-items:center;justify-content:center;margin:14px 0 8px;position:relative}
 .date-sep::before{content:'';position:absolute;left:0;right:0;height:1px;background:var(--bd2)}
 .date-sep span{font-size:.64rem;font-weight:600;letter-spacing:.08em;color:var(--muted);background:var(--bg);padding:0 10px;position:relative;text-transform:uppercase}
-
 .msg-row{display:flex;align-items:flex-end;gap:7px;margin-bottom:3px;opacity:0;transition:opacity .28s,transform .32s cubic-bezier(.16,1,.3,1)}
 .msg-own{flex-direction:row-reverse;transform:translateX(14px)}
 .msg-other{transform:translateX(-14px)}
 .msg-in{opacity:1!important;transform:none!important}
-
 .msg-av{flex-shrink:0}
 .msg-col{display:flex;flex-direction:column;max-width:60%;gap:2px}
 .msg-own .msg-col{align-items:flex-end}
@@ -772,7 +840,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .msg-meta{display:flex;align-items:center;gap:6px;margin-bottom:2px}
 .msg-auth{font-size:.68rem;font-weight:700;color:var(--ac2);display:flex;align-items:center}
 .msg-ts,.msg-ts-own{font-size:.6rem;color:var(--muted);margin-top:3px}
-
 .bubble{padding:9px 14px;border-radius:15px;font-size:.86rem;line-height:1.55;word-break:break-word;position:relative}
 .bubble:hover .msg-del{opacity:1}
 .bown{background:linear-gradient(148deg,#5e16b8,var(--ac),#9d3ef5);border-bottom-right-radius:3px;box-shadow:0 4px 18px rgba(138,43,226,.32);color:#fff}
@@ -780,31 +847,27 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .msg-del{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:rgba(255,95,122,.15);border:1px solid rgba(255,95,122,.3);color:var(--danger);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s;padding:0}
 .msg-del:hover{background:rgba(255,95,122,.28)}
 .msg-del svg{pointer-events:none}
-
-/* Typing */
 #typing-ind{align-items:center;gap:8px;padding:8px 13px;background:var(--s2);border:1px solid var(--bd2);border-radius:13px;border-bottom-left-radius:3px;width:fit-content;margin-top:4px;font-size:.72rem;color:var(--muted)}
 .typing-dots{display:flex;gap:3px;align-items:center}
 .typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:tb 1.3s ease infinite}
 .typing-dots span:nth-child(2){animation-delay:.16s}
 .typing-dots span:nth-child(3){animation-delay:.32s}
 @keyframes tb{0%,60%,100%{transform:translateY(0);background:var(--muted)}30%{transform:translateY(-5px);background:var(--ac2)}}
-
-/* Composer */
 #composer{padding:12px 18px;background:rgba(7,7,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bd);flex-shrink:0;position:relative}
-#composer-in{display:flex;align-items:flex-end;gap:8px;background:var(--s2);border:1px solid var(--bd2);border-radius:13px;padding:6px 6px 6px 14px;transition:border-color .2s,box-shadow .2s}
-#composer-in:focus-within{border-color:rgba(138,43,226,.38);box-shadow:0 0 0 3px rgba(138,43,226,.08)}
-#msg-inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--f);font-size:.86rem;line-height:1.5;resize:none;padding:5px 0;max-height:120px;overflow-y:auto}
-#msg-inp::placeholder{color:var(--muted)}
 #emoji-panel{position:absolute;bottom:72px;left:14px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:10px;display:flex;flex-wrap:wrap;gap:4px;width:260px;max-height:160px;overflow-y:auto;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:fadeUp .18s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .em-btn{width:32px;height:32px;background:none;border:none;font-size:1.1rem;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:background .12s}
 .em-btn:hover{background:var(--s2)}
+#composer-in{display:flex;align-items:flex-end;gap:8px;background:var(--s2);border:1px solid var(--bd2);border-radius:13px;padding:6px 6px 6px 8px;transition:border-color .2s,box-shadow .2s}
+#composer-in:focus-within{border-color:rgba(138,43,226,.38);box-shadow:0 0 0 3px rgba(138,43,226,.08)}
+#msg-inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--f);font-size:.86rem;line-height:1.5;resize:none;padding:5px 0;max-height:120px;overflow-y:auto}
+#msg-inp::placeholder{color:var(--muted)}
 #send-btn{width:34px;height:34px;flex-shrink:0;border:none;border-radius:9px;background:linear-gradient(135deg,#6b1abf,var(--ac2));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(138,43,226,.4);transition:transform .14s,box-shadow .18s}
 #send-btn:hover{transform:scale(1.08);box-shadow:0 5px 20px rgba(138,43,226,.55)}
 #send-btn:active{transform:scale(.9)}
 #send-btn svg{pointer-events:none}
 
-/* ── Mobile ── */
+/* Mobile */
 #back-btn{display:none}
 @media(max-width:680px){
   #app{position:relative;overflow:hidden}
@@ -818,20 +881,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   #composer{padding:10px 12px}
   #chat-hd{padding:10px 12px}
   .auth-box{padding:30px 22px}
+  #emoji-panel{left:8px;width:calc(100vw - 32px)}
 }
-
-/* safe area for notched phones */
 @supports(padding:max(0px)){
   #composer{padding-bottom:max(12px,env(safe-area-inset-bottom))}
 }
 </style>
 </head>
 <body>
-
 <canvas id="cv"></canvas>
 <div id="toasts"></div>
 
-<!-- AUTH -->
 <div id="auth" class="screen active">
   <div class="auth-box">
     <div class="auth-logo">Ne<span class="slash">/</span>xus</div>
@@ -853,7 +913,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" class="screen"></div>
 
 <script>
