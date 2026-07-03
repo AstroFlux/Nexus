@@ -252,67 +252,55 @@ function listenSidebar(){
   sidebarUnsub=()=>off(r,'value',h);
 }
 
-/* ── Message listener ── */
+/* ── Message listener ──
+   Strategy: onValue fires the FULL snapshot every time anything changes.
+   We do a straight DOM diff every call — clear and re-render.
+   Simple, correct, zero duplicates guaranteed.
+── */
 function listenMsgs(id){
   if(convUnsub){ convUnsub(); convUnsub=null; }
   const r=ref(db,'conversations/'+id+'/messages');
-  const rendered=new Set(); // keys already in DOM
 
-  // Step 1: load existing messages once with get()
-  get(r).then(snap=>{
+  const h=snap=>{
     const msgsEl=$('msgs'); if(!msgsEl) return;
-    msgsEl.innerHTML='';
-    let lastD='';
-    if(snap.exists()){
-      snap.forEach(c=>{
-        const m={...c.val(),_key:c.key};
-        rendered.add(m._key);
-        const ds=fmtDate(m.ts);
-        if(ds!==lastD){
-          const sep=mk('div'); sep.className='date-sep';
-          sep.innerHTML=`<span>${ds}</span>`;
-          msgsEl.appendChild(sep); lastD=ds;
-        }
-        appendMsg(m,false);
-      });
-    }
+
+    // Build ordered list from snapshot
+    const msgs=[];
+    if(snap.exists()) snap.forEach(c=>msgs.push({...c.val(),_key:c.key}));
+
+    // Find keys currently in DOM
+    const inDom=new Set();
+    msgsEl.querySelectorAll('.msg-row[data-key]').forEach(el=>inDom.add(el.dataset.key));
+
+    // Keys in snapshot
+    const inSnap=new Set(msgs.map(m=>m._key));
+
+    // Remove deleted
+    inDom.forEach(k=>{
+      if(!inSnap.has(k)) document.querySelector(`.msg-row[data-key="${k}"]`)?.remove();
+    });
+
+    // Add missing (new) messages only
+    msgs.forEach(m=>{
+      if(inDom.has(m._key)) return; // already in DOM, skip
+      // Check if we need a date separator before this message
+      const ds=fmtDate(m.ts);
+      // Find the last date sep text
+      const allSeps=msgsEl.querySelectorAll('.date-sep span');
+      const lastSepTxt=allSeps.length?allSeps[allSeps.length-1].textContent:'';
+      if(ds!==lastSepTxt){
+        const sep=mk('div'); sep.className='date-sep';
+        sep.innerHTML=`<span>${ds}</span>`;
+        msgsEl.appendChild(sep);
+      }
+      appendMsg(m, !inDom.has(m._key) && inDom.size>0);
+    });
+
     scrollMsgs();
+  };
 
-    // Step 2: after initial load, watch for changes
-    // Use onValue but ONLY process keys not already rendered
-    const h=snap2=>{
-      const msgsEl2=$('msgs'); if(!msgsEl2) return;
-      const current=new Map();
-      if(snap2.exists()) snap2.forEach(c=>current.set(c.key,c.val()));
-
-      // Handle deletions
-      rendered.forEach(k=>{
-        if(!current.has(k)){
-          document.querySelector(`.msg-row[data-key="${k}"]`)?.remove();
-          rendered.delete(k);
-        }
-      });
-
-      // Handle new messages only
-      current.forEach((val,key)=>{
-        if(rendered.has(key)) return;
-        rendered.add(key);
-        const m={...val,_key:key};
-        const ds=fmtDate(m.ts);
-        const lastSep=msgsEl2.querySelector('.date-sep:last-of-type span');
-        if(!lastSep||lastSep.textContent!==ds){
-          const sep=mk('div'); sep.className='date-sep';
-          sep.innerHTML=`<span>${ds}</span>`;
-          msgsEl2.appendChild(sep);
-        }
-        appendMsg(m,true);
-        scrollMsgs();
-      });
-    };
-
-    onValue(r,h);
-    convUnsub=()=>off(r,'value',h);
-  }).catch(e=>console.error('load msgs:',e));
+  onValue(r,h);
+  convUnsub=()=>off(r,'value',h);
 }
 
 async function sendMsg(text){
