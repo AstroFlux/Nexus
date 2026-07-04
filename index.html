@@ -260,7 +260,7 @@ function listenSidebar(){
 function listenMsgs(id){
   if(convUnsub){ convUnsub(); convUnsub=null; }
   const r=ref(db,'conversations/'+id+'/messages');
-  let prevKeys=[];
+  let lastCount=0;
 
   const h=snap=>{
     const msgsEl=$('msgs'); if(!msgsEl) return;
@@ -268,13 +268,10 @@ function listenMsgs(id){
     const msgs=[];
     if(snap.exists()) snap.forEach(c=>msgs.push({...c.val(),_key:c.key}));
 
-    const newKeys=msgs.map(m=>m._key);
+    const isNew=msgs.length>lastCount;
+    lastCount=msgs.length;
 
-    // If keys haven't changed at all, do nothing (e.g. metadata update)
-    if(JSON.stringify(newKeys)===JSON.stringify(prevKeys)) return;
-    prevKeys=newKeys;
-
-    // Full re-render from snapshot — always correct, never duplicates
+    // Always full re-render — snapshot is always correct
     msgsEl.innerHTML='';
     let lastD='';
     msgs.forEach(m=>{
@@ -284,12 +281,14 @@ function listenMsgs(id){
         sep.innerHTML=`<span>${ds}</span>`;
         msgsEl.appendChild(sep); lastD=ds;
       }
-      appendMsg(m, false); // no animation on re-render
+      appendMsg(m,false);
     });
-    // Animate only the last message if it's new
-    const lastRow=msgsEl.querySelector('.msg-row:last-child');
-    if(lastRow) lastRow.classList.remove('msg-in');
-    requestAnimationFrame(()=>requestAnimationFrame(()=>lastRow?.classList.add('msg-in')));
+
+    // Animate only the last bubble when a new message arrives
+    if(isNew){
+      const last=msgsEl.querySelector('.msg-row:last-of-type');
+      if(last){ last.classList.remove('msg-in'); requestAnimationFrame(()=>requestAnimationFrame(()=>last.classList.add('msg-in'))); }
+    }
 
     scrollMsgs();
   };
