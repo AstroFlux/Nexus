@@ -92,8 +92,10 @@ function initPN(uid){
     message(ev){
       // New message from the other person arrives here
       if(!activeCid||ev.channel!==`conv.${activeCid}`) return;
-      if(ev.message.uid===me.uid) return; // ignore own (already shown optimistically)
+      if(ev.message.uid===me.uid) return; // ignore own — shown optimistically on send
       const m=ev.message;
+      // Don't render if already in DOM (safety check)
+      if(m._key && document.querySelector(`.msg-row[data-key="${m._key}"]`)) return;
       const box=$('msgs'); if(!box) return;
       const ds=fmtDate(m.ts);
       const lastSep=box.querySelector('.date-sep:last-of-type span');
@@ -170,7 +172,8 @@ async function getOrCreate(other){
   const id=cid(me.uid,other.uid);
   const snap=await get(ref(db,`conversations/${id}`));
   if(!snap.exists()) await set(ref(db,`conversations/${id}`),{
-    id,participants:[me.uid,other.uid],
+    id,
+    participants:{[me.uid]:true,[other.uid]:true},
     participantNames:{[me.uid]:me.displayName,[other.uid]:other.displayName},
     lastMessage:'',lastTs:Date.now(),createdAt:Date.now()
   });
@@ -182,7 +185,16 @@ function listenSidebar(){
   const r=ref(db,'conversations');
   const h=snap=>{
     const list=[];
-    if(snap.exists()) snap.forEach(c=>{const v=c.val();if(v.participants?.includes(me.uid))list.push(v);});
+    if(snap.exists()) snap.forEach(c=>{
+      const v=c.val();
+      // participants stored as {uid: true} object OR legacy array — handle both
+      const parts=v.participants;
+      const inConv = parts && (
+        (typeof parts === 'object' && !Array.isArray(parts) && parts[me.uid]) ||
+        (Array.isArray(parts) && parts.includes(me.uid))
+      );
+      if(inConv) list.push(v);
+    });
     list.sort((a,b)=>(b.lastTs||0)-(a.lastTs||0));
     renderSidebar(list);
   };
@@ -383,7 +395,10 @@ function renderSidebar(list){
   const el=$('conv-list'); if(!el) return;
   if(!list.length){el.innerHTML='<div class="empty-hint">No conversations yet.<br/>Search for someone above.</div>';return;}
   el.innerHTML=list.map(c=>{
-    const oid=c.participants?.find(p=>p!==me.uid)||'';
+    const parts=c.participants||{};
+    const oid = Array.isArray(parts)
+      ? parts.find(p=>p!==me.uid)||''
+      : Object.keys(parts).find(p=>p!==me.uid)||'';
     const oname=c.participantNames?.[oid]||'Unknown';
     const last=c.lastMessage?esc(c.lastMessage.slice(0,40))+(c.lastMessage.length>40?'…':''):'No messages yet';
     return `<div class="conv-item${c.id===activeCid?' conv-active':''}" data-cid="${c.id}" data-uid="${oid}" data-name="${esc(oname)}">
