@@ -98,8 +98,7 @@ function initPN(uid){
       if(m._key && document.querySelector(`.msg-row[data-key="${m._key}"]`)) return;
       const box=$('msgs'); if(!box) return;
       const ds=fmtDate(m.ts);
-      const lastSep=box.querySelector('.date-sep:last-of-type span');
-      if(!lastSep||lastSep.textContent!==ds) addDateSep(box,ds);
+      if(ds!==lastDateShown){addDateSep(box,ds);lastDateShown=ds;}
       addMsgEl(box,m,true);
       scrollBottom();
     },
@@ -189,10 +188,17 @@ function listenSidebar(){
       const v=c.val();
       // participants stored as {uid: true} object OR legacy array — handle both
       const parts=v.participants;
-      const inConv = parts && (
-        (typeof parts === 'object' && !Array.isArray(parts) && parts[me.uid]) ||
-        (Array.isArray(parts) && parts.includes(me.uid))
-      );
+      let inConv = false;
+      if(parts){
+        if(Array.isArray(parts)){
+          // plain JS array
+          inConv = parts.includes(me.uid);
+        } else if(typeof parts === 'object'){
+          // could be {uid:true} OR Firebase-serialised array {0:uid1, 1:uid2}
+          inConv = Object.values(parts).some(v=>v===me.uid||v===true&&parts[me.uid]);
+          if(!inConv) inConv = !!parts[me.uid];
+        }
+      }
       if(inConv) list.push(v);
     });
     list.sort((a,b)=>(b.lastTs||0)-(a.lastTs||0));
@@ -274,8 +280,7 @@ async function sendMsg(text){
   const box=$('msgs');
   if(box){
     const ds=fmtDate(m.ts);
-    const lastSep=box.querySelector('.date-sep:last-of-type span');
-    if(!lastSep||lastSep.textContent!==ds) addDateSep(box,ds);
+    if(ds!==lastDateShown){addDateSep(box,ds);lastDateShown=ds;}
     addMsgEl(box,m,true);
     scrollBottom();
   }
