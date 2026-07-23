@@ -378,6 +378,24 @@ function toast(message, kind = "success") {
 }
 
 
+
+// Create ui namespace so app.js can use ui.els, ui.toast, etc.
+const ui = {
+  els,
+  showAuth,
+  setAuthMode,
+  avatar,
+  isDev,
+  nameMarkup,
+  renderConversations,
+  renderSearchResults,
+  setChatUser,
+  addDateSeparator,
+  addMessage,
+  scrollMessages,
+  toast
+};
+
 // ── app ──
 
 
