@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050508">
+  <title>Nexus by AstroFlux</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--bg:#050508;--surface:#0c0c14;--surface2:#12121e;--accent:#8a2be2;--hover:#a855f7;--text:#eeeef5;--muted:#6b6b88;--success:#39e08a;--danger:#ff5f7a;--border:rgba(255,255,255,.08);font-family:Inter,sans-serif;color:var(--text)}*{box-sizing:border-box}body{margin:0;background:var(--bg);min-height:100vh;overflow:hidden}button,input,textarea{font:inherit}button{cursor:pointer;color:inherit;border:0}#particles{position:fixed;inset:0;z-index:-1;opacity:.6}.screen{min-height:100vh}.hidden{display:none!important}.glass-panel{background:rgba(12,12,20,.78);border:1px solid var(--border);box-shadow:0 24px 80px rgba(0,0,0,.35);backdrop-filter:blur(22px)}.auth-screen{display:grid;place-items:center;padding:24px}.auth-card{width:min(420px,100%);padding:42px;border-radius:24px}.brand{font-size:2rem;font-weight:800;letter-spacing:-1.5px}.brand i{font-style:normal;background:linear-gradient(135deg,#c084fc,var(--accent));color:transparent;background-clip:text}.brand.compact{font-size:1.35rem}.eyebrow{text-transform:uppercase;letter-spacing:2px;color:var(--accent);font-size:.68rem;margin:5px 0 32px}.auth-card h1{font-size:1.65rem;margin:0 0 8px}.muted,small{color:var(--muted)}form label{display:grid;gap:8px;font-size:.78rem;color:var(--muted);margin-top:17px}input,textarea{color:var(--text);background:rgba(255,255,255,.045);border:1px solid var(--border);outline:0;border-radius:10px;padding:13px 14px;transition:.2s}input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(138,43,226,.14)}.primary-button{width:100%;margin-top:22px;border-radius:10px;padding:14px;background:linear-gradient(135deg,var(--accent),#5b21b6);font-weight:700}.primary-button:hover{background:linear-gradient(135deg,var(--hover),var(--accent))}.auth-switch{text-align:center;color:var(--muted);font-size:.78rem;margin-top:20px}.auth-switch button{background:none;color:#c084fc}.form-error{color:var(--danger);font-size:.8rem;min-height:18px}.app-screen{display:grid;grid-template-columns:290px 1fr;padding:14px;gap:14px}.sidebar,.chat-area{border-radius:18px}.sidebar{padding:20px;display:flex;flex-direction:column;min-height:calc(100vh - 28px)}.sidebar-header,.profile-row,.chat-header{display:flex;align-items:center}.sidebar-header{justify-content:space-between}.icon-button{background:transparent;color:var(--muted);font-size:1.25rem;padding:5px}.icon-button:hover{color:var(--text)}.profile-row{gap:10px;margin:28px 0}.profile-row>div{min-width:0;flex:1}.profile-row strong,.profile-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-row small{font-size:.7rem;margin-top:3px}.avatar{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:50%;background:linear-gradient(135deg,#c084fc,var(--accent));font-weight:800}.avatar.small{width:38px;height:38px;font-size:.75rem}.avatar.tiny{width:32px;height:32px;font-size:.68rem}.search-wrap{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border-radius:10px;padding-left:12px;color:var(--muted)}.search-wrap input{width:100%;background:transparent;border:0;box-shadow:none}.search-results{margin-top:8px}.search-result,.conversation{width:100%;display:flex;gap:10px;align-items:center;text-align:left;background:transparent;border-radius:10px;padding:9px 7px}.search-result:hover,.conversation:hover,.conversation.active{background:rgba(138,43,226,.16)}.search-result strong,.search-result small,.conversation strong,.conversation small{display:block}.search-result small,.conversation small{font-size:.68rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.search-result>span:last-child,.conversation-copy{min-width:0;flex:1}.section-label{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:1.4px;margin:26px 7px 8px}.conversations{overflow:auto}.list-empty{font-size:.8rem;color:var(--muted);padding:8px}.dev-badge{font-size:.55rem;letter-spacing:.6px;color:#d8b4fe;background:rgba(138,43,226,.3);padding:3px 5px;border-radius:4px}.chat-area{min-width:0;position:relative;background:rgba(12,12,20,.7);border:1px solid var(--border);overflow:hidden}.empty-chat{height:100%;display:grid;place-items:center;align-content:center;gap:7px;text-align:center;color:var(--muted)}.empty-chat .brand{color:var(--text);margin-bottom:12px}.empty-chat h2{color:var(--text);margin:0}.empty-chat p{margin:0}.chat-view{height:100%;display:grid;grid-template-rows:auto 1fr auto auto}.chat-header{gap:12px;padding:20px 24px;border-bottom:1px solid var(--border)}.chat-heading{flex:1;min-width:0}.chat-heading h2{font-size:1rem;margin:0 0 5px}.status{color:var(--muted);font-size:.7rem}.status i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:6px}.status.online{color:var(--success)}.status.online i{background:var(--success)}.danger-button:hover{color:var(--danger)}.messages{padding:26px clamp(16px,5vw,70px);overflow-y:auto}.date-separator{text-align:center;color:var(--muted);font-size:.66rem;margin:10px 0 20px}.message-row{display:flex;margin:6px 0}.message-row.own{justify-content:flex-end}.message-bubble{position:relative;max-width:min(620px,75%);padding:11px 14px 8px;border-radius:15px 15px 15px 4px;background:rgba(255,255,255,.06);border:1px solid var(--border)}.own .message-bubble{border-radius:15px 15px 4px 15px;background:linear-gradient(135deg,#7e22ce,var(--accent))}.message-bubble p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;line-height:1.45;font-size:.88rem}.message-bubble footer{color:rgba(255,255,255,.55);font-size:.62rem;margin-top:6px}.message-delete{position:absolute;right:-26px;top:3px;background:none;color:var(--muted);font-size:1rem;opacity:0}.message-bubble:hover .message-delete{opacity:1}.typing{min-height:22px;padding:0 26px;color:var(--muted);font-size:.7rem}.composer{display:flex;gap:10px;padding:14px 20px 20px}.composer-input{display:flex;align-items:flex-end;gap:5px;position:relative;flex:1;background:rgba(255,255,255,.045);border:1px solid var(--border);border-radius:12px;padding:6px 9px}.composer textarea{border:0;background:none;resize:none;padding:8px;max-height:140px;flex:1}.composer textarea:focus{box-shadow:none}.composer-input>button{background:none;color:var(--muted);font-size:1.3rem;padding:6px}.send-button{width:44px;border-radius:12px;background:var(--accent);font-size:1.3rem}.send-button:hover{background:var(--hover)}.emoji-picker{position:absolute;bottom:56px;left:0;background:var(--surface2);border:1px solid var(--border);padding:8px;border-radius:12px;display:grid;grid-template-columns:repeat(6,1fr);box-shadow:0 10px 35px #000}.emoji-picker button{background:none;padding:8px;border-radius:7px}.emoji-picker button:hover{background:rgba(255,255,255,.1)}.toast{position:fixed;right:24px;bottom:24px;padding:13px 17px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);transform:translateY(18px);opacity:0;transition:.25s;pointer-events:none;font-size:.8rem}.toast.visible{transform:none;opacity:1}.toast.error{border-color:rgba(255,95,122,.5);color:#ffb2bd}.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:center;padding:20px}.modal-card{width:min(380px,100%);padding:28px;border-radius:16px;position:relative}.modal-card h2{margin-top:0}.modal-close{position:absolute;top:14px;right:17px;background:none;color:var(--muted);font-size:1.5rem}.mobile-only{display:none}@media(max-width:760px){.app-screen{display:block;padding:0}.sidebar,.chat-area{min-height:100vh;border-radius:0}.sidebar{position:fixed;z-index:5;inset:0 auto 0 0;width:min(310px,88vw);transform:translateX(-105%);transition:transform .25s}.sidebar-open .sidebar{transform:none}.chat-area{height:100vh}.empty-chat{padding:20px}.mobile-only{display:block}.chat-header{padding:16px}.messages{padding:20px 15px}.composer{padding:10px 12px 14px}.message-bubble{max-width:86%}.message-delete{opacity:1;right:-22px}.chat-open .sidebar{transform:translateX(-105%)}.chat-open .chat-area{display:block}.toast{right:14px;bottom:14px;left:14px;text-align:center}}
+
+</style>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.8.2.0.min.js"></script>
+</head>
+<body>
+  <canvas id="particles" aria-hidden="true"></canvas>
+  <main id="auth-screen" class="screen auth-screen">
+    <section class="auth-card glass-panel">
+      <div class="brand"><span>Ne</span><i>/</i><span>xus</span></div>
+      <p class="eyebrow">by AstroFlux</p>
+      <h1 id="auth-title">Welcome back</h1>
+      <p class="muted">Your conversations, in real time.</p>
+      <form id="auth-form">
+        <label id="name-field" class="hidden">Display name<input id="display-name" autocomplete="name"></label>
+        <label>Email<input id="email" type="email" autocomplete="email" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" minlength="6" required></label>
+        <p id="auth-error" class="form-error" role="alert"></p>
+        <button id="auth-submit" class="primary-button" type="submit">Sign in</button>
+      </form>
+      <div id="auth-switch" class="auth-switch">New to Nexus? <button type="button">Create an account</button></div>
+    </section>
+  </main>
+
+  <main id="app-screen" class="screen app-screen hidden">
+    <aside id="sidebar" class="sidebar glass-panel">
+      <header class="sidebar-header"><div class="brand compact"><span>Ne</span><i>/</i><span>xus</span></div><button id="logout-button" class="icon-button" title="Sign out">↪</button></header>
+      <section class="profile-row"><span id="current-avatar" class="avatar"></span><div><strong id="current-name"></strong><small id="current-email"></small></div><button id="edit-profile" class="icon-button" title="Edit profile">✎</button></section>
+      <div class="search-wrap"><span>⌕</span><input id="search-input" placeholder="Find someone" autocomplete="off"></div>
+      <div id="search-results" class="search-results"></div>
+      <div class="section-label">Messages</div>
+      <nav id="conversations" class="conversations"></nav>
+    </aside>
+    <section class="chat-area">
+      <div id="empty-chat" class="empty-chat"><div class="brand"><span>Ne</span><i>/</i><span>xus</span></div><h2>Make a connection.</h2><p>Select a conversation or find someone new.</p></div>
+      <div id="chat-view" class="chat-view hidden">
+        <header class="chat-header"><button id="back-button" class="icon-button mobile-only" title="Back">‹</button><span id="chat-avatar" class="avatar"></span><div class="chat-heading"><h2 id="chat-name"></h2><span id="chat-status" class="status"><i></i> Offline</span></div><button id="delete-conversation" class="icon-button danger-button" title="Delete conversation">⌫</button></header>
+        <div id="messages" class="messages" aria-live="polite"></div>
+        <div id="typing" class="typing"></div>
+        <form id="composer" class="composer"><div class="composer-input"><button id="emoji-button" type="button" title="Add emoji">☺</button><textarea id="message-input" rows="1" placeholder="Write a message..." maxlength="4000"></textarea><div id="emoji-picker" class="emoji-picker hidden"></div></div><button id="send-button" class="send-button" type="submit" title="Send message">↑</button></form>
+      </div>
+    </section>
+  </main>
+
+  <div id="profile-modal" class="modal hidden"><form id="profile-form" class="modal-card glass-panel"><button id="close-modal" class="modal-close" type="button" title="Close">×</button><h2>Edit profile</h2><label>Display name<input id="profile-name" required maxlength="40"></label><button class="primary-button" type="submit">Save changes</button></form></div>
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module">
+
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged, updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getDatabase, ref, set, get, push, update, remove,
+  onValue, onDisconnect, query, orderByChild, equalTo
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+// ── config ──
+// Nexus by AstroFlux — configuration & API keys
+// Keys are provided exactly as specified. Exported for ES module usage.
+
+const PUBNUB_PUBLISH_KEY   = "pub-c-0f810fcf-e8e9-4859-bba2-f35a6d515e57";
+const PUBNUB_SUBSCRIBE_KEY = "sub-c-bae229b6-cf5e-4462-ab2f-83f5959ea751";
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDpX1QcePoQSbldSZ-mmtm4GZyYs44sGzg",
+  authDomain: "nexus-c1e64.firebaseapp.com",
+  projectId: "nexus-c1e64",
+  storageBucket: "nexus-c1e64.firebasestorage.app",
+  messagingSenderId: "233723930326",
+  appId: "1:233723930326:web:8560a2e9e40e722ebd0b77",
+  databaseURL: "https://nexus-c1e64-default-rtdb.firebaseio.com"
+};
+
+
+// ── firebase init ──
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// ── auth ──
+
+
+async function register(email, password, displayName) {
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  await updateProfile(result.user, { displayName });
+  return result.user;
+}
+
+function login(email, password) {
+  return signInWithEmailAndPassword(auth, email, password).then(result => result.user);
+}
+
+function logout() {
+  return signOut(auth);
+}
+
+async function changeDisplayName(user, displayName) {
+  await updateProfile(user, { displayName });
+  return user;
+}
+
+function authError(error) {
+  const messages = {
+    "auth/invalid-credential": "Email or password is incorrect.",
+    "auth/email-already-in-use": "That email is already registered.",
+    "auth/invalid-email": "Enter a valid email address.",
+    "auth/weak-password": "Password must be at least 6 characters.",
+    "auth/too-many-requests": "Too many attempts. Try again shortly."
+  };
+  return messages[error.code] || error.message || "Something went wrong.";
+}
+
+
+// ── pubnub ──
+// PubNub SDK is loaded globally via CDN <script> in index.html (window.PubNub).
+let pn = null;
+let listenerAdded = false;
+
+// Module-level state used by the message listener.
+let onMessageArrived = null;   // callback(messageObj)
+let onTypingArrived = null;    // callback({fromUid, isTyping})
+
+function initPubNub(user, handlers) {
+  currentUser = user;
+  onMessageArrived = handlers.onMessage;
+  onTypingArrived = handlers.onTyping;
+
+  if (!pn) {
+    pn = new PubNub({
+      publishKey: PUBNUB_PUBLISH_KEY,
+      subscribeKey: PUBNUB_SUBSCRIBE_KEY,
+      uuid: user.uid,
+      heartbeatInterval: 30
+    });
+  }
+
+  // Listener added ONCE — never re-added anywhere else.
+  if (!listenerAdded) {
+    pn.addListener({
+      message: (ev) => {
+        const msg = ev.message;
+        if (!msg) return;
+        // Filter: ignore our own messages (already shown on sender screen).
+        if (msg.uid === currentUser.uid) return;
+        if (onMessageArrived) onMessageArrived(msg);
+      },
+      signal: (ev) => {
+        const sig = ev.message;
+        if (!sig) return;
+        if (sig.type === "typing" && sig.fromUid !== currentUser.uid) {
+          if (onTypingArrived) onTypingArrived(sig);
+        }
+      }
+    });
+    listenerAdded = true;
+  }
+}
+
+function subscribeToConversation(conversationId) {
+  activeConversationId = conversationId;
+  if (!pn) return;
+  pn.subscribe({ channels: [conversationId] });
+}
+
+function unsubscribeFromConversation(conversationId) {
+  if (!pn || !conversationId) return;
+  pn.unsubscribe({ channels: [conversationId] });
+  if (activeConversationId === conversationId) activeConversationId = null;
+}
+
+function publishMessage(conversationId, messageObj) {
+  if (!pn) return;
+  pn.publish({
+    channel: conversationId,
+    message: messageObj
+  });
+}
+
+function sendTypingSignal(conversationId, fromUid, isTyping) {
+  if (!pn) return;
+  pn.signal({
+    channel: conversationId,
+    message: { type: "typing", fromUid, isTyping }
+  });
+}
+
+
+// ── ui ──
+const $ = (selector) => document.querySelector(selector);
+
+const els = {
+  authScreen: $("#auth-screen"),
+  appScreen: $("#app-screen"),
+  authForm: $("#auth-form"),
+  authTitle: $("#auth-title"),
+  nameField: $("#name-field"),
+  nameInput: $("#display-name"),
+  emailInput: $("#email"),
+  passwordInput: $("#password"),
+  authSubmit: $("#auth-submit"),
+  authSwitch: $("#auth-switch"),
+  authError: $("#auth-error"),
+  currentAvatar: $("#current-avatar"),
+  currentName: $("#current-name"),
+  currentEmail: $("#current-email"),
+  conversations: $("#conversations"),
+  searchInput: $("#search-input"),
+  searchResults: $("#search-results"),
+  emptyChat: $("#empty-chat"),
+  chatView: $("#chat-view"),
+  chatAvatar: $("#chat-avatar"),
+  chatName: $("#chat-name"),
+  chatStatus: $("#chat-status"),
+  messages: $("#messages"),
+  composer: $("#composer"),
+  messageInput: $("#message-input"),
+  sendButton: $("#send-button"),
+  emojiButton: $("#emoji-button"),
+  emojiPicker: $("#emoji-picker"),
+  typing: $("#typing"),
+  menuButton: $("#menu-button"),
+  backButton: $("#back-button"),
+  deleteConversation: $("#delete-conversation"),
+  logoutButton: $("#logout-button"),
+  editProfile: $("#edit-profile"),
+  toast: $("#toast"),
+  modal: $("#profile-modal"),
+  modalForm: $("#profile-form"),
+  modalInput: $("#profile-name"),
+  closeModal: $("#close-modal")
+};
+
+function showAuth(show) {
+  els.authScreen.classList.toggle("hidden", !show);
+  els.appScreen.classList.toggle("hidden", show);
+}
+
+function setAuthMode(signUp) {
+  els.authTitle.textContent = signUp ? "Create your account" : "Welcome back";
+  els.authSubmit.textContent = signUp ? "Create account" : "Sign in";
+  els.nameField.classList.toggle("hidden", !signUp);
+  els.authSwitch.innerHTML = signUp ? "Already a member? <button type=\"button\">Sign in</button>" : "New to Nexus? <button type=\"button\">Create an account</button>";
+  els.authError.textContent = "";
+}
+
+function avatar(name, element) {
+  const label = (name || "?").trim().slice(0, 1).toUpperCase();
+  element.textContent = label;
+  element.setAttribute("aria-label", `${name || "User"} avatar`);
+}
+
+function isDev(name) {
+  return String(name || "").trim() === "ASTRO";
+}
+
+function nameMarkup(name) {
+  const wrapper = document.createElement("span");
+  wrapper.textContent = name || "Unknown user";
+  if (isDev(name)) {
+    const badge = document.createElement("b");
+    badge.className = "dev-badge";
+    badge.textContent = "DEV";
+    wrapper.append(" ", badge);
+  }
+  return wrapper;
+}
+
+function renderConversations(items, activeId) {
+  els.conversations.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "list-empty";
+    empty.textContent = "No conversations yet";
+    els.conversations.append(empty);
+    return;
+  }
+  items.forEach(item => {
+    const button = document.createElement("button");
+    button.className = `conversation ${item.id === activeId ? "active" : ""}`;
+    button.dataset.conversationId = item.id;
+    const avatarEl = document.createElement("span");
+    avatarEl.className = "avatar small";
+    avatar(item.user.displayName, avatarEl);
+    const text = document.createElement("span");
+    text.className = "conversation-copy";
+    const title = document.createElement("strong");
+    title.append(nameMarkup(item.user.displayName));
+    const preview = document.createElement("small");
+    preview.textContent = item.data?.lastMessage?.text || "Start a conversation";
+    text.append(title, preview);
+    button.append(avatarEl, text);
+    els.conversations.append(button);
+  });
+}
+
+function renderSearchResults(users) {
+  els.searchResults.replaceChildren();
+  users.forEach(user => {
+    const button = document.createElement("button");
+    button.className = "search-result";
+    button.dataset.uid = user.uid;
+    const avatarEl = document.createElement("span");
+    avatarEl.className = "avatar tiny";
+    avatar(user.displayName, avatarEl);
+    const copy = document.createElement("span");
+    const name = document.createElement("strong");
+    name.append(nameMarkup(user.displayName));
+    const email = document.createElement("small");
+    email.textContent = user.email || "";
+    copy.append(name, email);
+    button.append(avatarEl, copy);
+    els.searchResults.append(button);
+  });
+}
+
+function setChatUser(user) {
+  els.chatName.replaceChildren(nameMarkup(user.displayName));
+  avatar(user.displayName, els.chatAvatar);
+}
+
+function addDateSeparator(label) {
+  const separator = document.createElement("div");
+  separator.className = "date-separator";
+  separator.textContent = label;
+  els.messages.append(separator);
+}
+
+function addMessage(message, own, onDelete) {
+  const row = document.createElement("article");
+  row.className = `message-row ${own ? "own" : "other"}`;
+  row.dataset.messageKey = message.key;
+  const bubble = document.createElement("div");
+  bubble.className = "message-bubble";
+  const text = document.createElement("p");
+  text.textContent = message.text;
+  const meta = document.createElement("footer");
+  meta.textContent = new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  bubble.append(text, meta);
+  if (own) {
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "message-delete";
+    deleteButton.type = "button";
+    deleteButton.title = "Delete message";
+    deleteButton.textContent = "×";
+    deleteButton.addEventListener("click", () => onDelete(message.key, row));
+    bubble.append(deleteButton);
+  }
+  row.append(bubble);
+  els.messages.append(row);
+}
+
+function scrollMessages() {
+  els.messages.scrollTop = els.messages.scrollHeight;
+}
+
+let toastTimer;
+function toast(message, kind = "success") {
+  clearTimeout(toastTimer);
+  els.toast.textContent = message;
+  els.toast.className = `toast visible ${kind}`;
+  toastTimer = setTimeout(() => els.toast.className = "toast", 3200);
+}
+
+
+// ── app ──
+
+
+let currentUser = null;
+let activeConversationId = null;
+let activeOtherUser = null;
+let conversations = [];
+let users = [];
+let conversationStop = null;
+let presenceStop = null;
+let typingTimer;
+let lastDateShown = "";
+const emojis = ["😀", "😂", "😍", "🥳", "😎", "🤔", "😭", "😅", "🙌", "👏", "❤️", "🔥", "✨", "🎉", "👍", "👀", "💜", "✅"];
+
+const conversationIdFor = (first, second) => [first, second].sort().join("_");
+const userRecord = (uid) => users.find(user => user.uid === uid);
+
+function dateLabel(timestamp) {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
+}
+
+function showDateIfNeeded(timestamp) {
+  const label = dateLabel(timestamp);
+  if (label !== lastDateShown) {
+    lastDateShown = label;
+    ui.addDateSeparator(label);
+  }
+}
+
+function currentConversationItems(data) {
+  return Object.entries(data || {}).filter(([, value]) => value?.participants?.[currentUser.uid] === true).map(([id, value]) => {
+    const otherUid = Object.keys(value.participants).find(uid => uid !== currentUser.uid);
+    return { id, data: value, user: userRecord(otherUid) || { uid: otherUid, displayName: "Unknown user", email: "" } };
+  }).sort((a, b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0));
+}
+
+function watchConversations() {
+  if (conversationStop) conversationStop();
+  conversationStop = onValue(ref(db, "conversations"), snapshot => {
+    conversations = currentConversationItems(snapshot.val());
+    ui.renderConversations(conversations, activeConversationId);
+  });
+}
+
+async function loadUsers() {
+  const snapshot = await get(ref(db, "users"));
+  users = Object.entries(snapshot.val() || {}).map(([uid, value]) => ({ uid, ...value })).filter(user => user.uid !== currentUser.uid);
+}
+
+async function startConversation(otherUser) {
+  const id = conversationIdFor(currentUser.uid, otherUser.uid);
+  const participants = { [currentUser.uid]: true, [otherUser.uid]: true };
+  await update(ref(db, `conversations/${id}`), { participants, updatedAt: Date.now() });
+  ui.renderSearchResults([]);
+  ui.els.searchInput.value = "";
+  await openConversation({ id, user: otherUser, data: { participants } });
+}
+
+function handleIncomingMessage(message) {
+  if (message.conversationId !== activeConversationId) return;
+  showDateIfNeeded(message.createdAt);
+  ui.addMessage(message, false, deleteOwnMessage);
+  ui.scrollMessages();
+}
+
+function handleTyping(signal) {
+  if (signal.conversationId && signal.conversationId !== activeConversationId) return;
+  ui.els.typing.textContent = signal.isTyping && activeOtherUser ? `${activeOtherUser.displayName} is typing...` : "";
+  if (signal.isTyping) {
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => ui.els.typing.textContent = "", 2400);
+  }
+}
+
+async function openConversation(item) {
+  if (activeConversationId && activeConversationId !== item.id) unsubscribeFromConversation(activeConversationId);
+  activeConversationId = item.id;
+  activeOtherUser = item.user;
+  lastDateShown = "";
+  ui.els.emptyChat.classList.add("hidden");
+  ui.els.chatView.classList.remove("hidden");
+  ui.setChatUser(activeOtherUser);
+  ui.renderConversations(conversations, activeConversationId);
+  ui.els.messages.replaceChildren();
+  ui.els.typing.textContent = "";
+  subscribeToConversation(activeConversationId);
+  watchPresence(activeOtherUser.uid);
+
+  // History is loaded once when opening a conversation; messages never use onValue.
+  const snapshot = await get(ref(db, `messages/${activeConversationId}`));
+  const history = Object.entries(snapshot.val() || {}).map(([key, message]) => ({ key, ...message })).sort((a, b) => a.createdAt - b.createdAt);
+  history.forEach(message => {
+    showDateIfNeeded(message.createdAt);
+    ui.addMessage(message, message.uid === currentUser.uid, deleteOwnMessage);
+  });
+  ui.scrollMessages();
+  document.body.classList.add("chat-open");
+}
+
+function watchPresence(uid) {
+  if (presenceStop) presenceStop();
+  presenceStop = onValue(ref(db, `users/${uid}/online`), snapshot => {
+    const online = snapshot.val() === true;
+    ui.els.chatStatus.className = `status ${online ? "online" : ""}`;
+    ui.els.chatStatus.innerHTML = `<i></i>${online ? "Online" : "Offline"}`;
+  });
+}
+
+async function sendMessage(event) {
+  event.preventDefault();
+  const text = ui.els.messageInput.value.trim();
+  if (!text || !activeConversationId || !activeOtherUser) return;
+  const messageRef = push(ref(db, `messages/${activeConversationId}`));
+  const message = { key: messageRef.key, conversationId: activeConversationId, uid: currentUser.uid, text, createdAt: Date.now() };
+  showDateIfNeeded(message.createdAt);
+  ui.addMessage(message, true, deleteOwnMessage);
+  ui.scrollMessages();
+  ui.els.messageInput.value = "";
+  ui.els.messageInput.style.height = "auto";
+  sendTypingSignal(activeConversationId, currentUser.uid, false);
+  try {
+    await set(messageRef, message);
+    await update(ref(db, `conversations/${activeConversationId}`), { lastMessage: { text, uid: currentUser.uid, createdAt: message.createdAt }, updatedAt: message.createdAt });
+    publishMessage(activeConversationId, message);
+  } catch (error) {
+    ui.toast(authError(error), "error");
+  }
+}
+
+async function deleteOwnMessage(key, row) {
+  if (!activeConversationId) return;
+  await remove(ref(db, `messages/${activeConversationId}/${key}`));
+  row.remove();
+}
+
+async function deleteConversation() {
+  if (!activeConversationId || !confirm("Delete this conversation for you and the other person?")) return;
+  await Promise.all([
+    remove(ref(db, `conversations/${activeConversationId}`)),
+    remove(ref(db, `messages/${activeConversationId}`))
+  ]);
+  unsubscribeFromConversation(activeConversationId);
+  activeConversationId = null;
+  activeOtherUser = null;
+  ui.els.chatView.classList.add("hidden");
+  ui.els.emptyChat.classList.remove("hidden");
+  document.body.classList.remove("chat-open");
+  ui.toast("Conversation deleted");
+}
+
+async function setPresence(user) {
+  const onlineRef = ref(db, `users/${user.uid}/online`);
+  await update(ref(db, `users/${user.uid}`), { uid: user.uid, email: user.email, displayName: user.displayName || "Nexus user", online: true });
+  await onDisconnect(onlineRef).set(false);
+}
+
+function searchUsers(value) {
+  const term = value.trim().toLowerCase();
+  ui.renderSearchResults(term ? users.filter(user => `${user.displayName} ${user.email}`.toLowerCase().includes(term)).slice(0, 8) : []);
+}
+
+function bindEvents() {
+  let signUpMode = false;
+  ui.setAuthMode(false);
+  ui.els.authSwitch.addEventListener("click", () => { signUpMode = !signUpMode; ui.setAuthMode(signUpMode); });
+  ui.els.authForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    ui.els.authError.textContent = "";
+    try {
+      if (signUpMode) await register(ui.els.emailInput.value.trim(), ui.els.passwordInput.value, ui.els.nameInput.value.trim() || "Nexus user");
+      else await login(ui.els.emailInput.value.trim(), ui.els.passwordInput.value);
+    } catch (error) { ui.els.authError.textContent = authError(error); }
+  });
+  ui.els.logoutButton.addEventListener("click", () => logout().catch(error => ui.toast(authError(error), "error")));
+  ui.els.searchInput.addEventListener("input", event => searchUsers(event.target.value));
+  ui.els.searchResults.addEventListener("click", event => { const result = event.target.closest("[data-uid]"); if (result) startConversation(userRecord(result.dataset.uid)); });
+  ui.els.conversations.addEventListener("click", event => { const button = event.target.closest("[data-conversation-id]"); const item = conversations.find(conversation => conversation.id === button?.dataset.conversationId); if (item) openConversation(item); });
+  ui.els.modalForm.addEventListener("submit", async event => { event.preventDefault(); const name = ui.els.modalInput.value.trim(); if (!name) return; try { await changeDisplayName(currentUser, name); await update(ref(db, `users/${currentUser.uid}`), { displayName: name }); ui.els.currentName.replaceChildren(ui.nameMarkup(name)); if (activeOtherUser) ui.setChatUser(activeOtherUser); ui.els.modal.classList.add("hidden"); ui.toast("Profile updated"); } catch (error) { ui.toast(authError(error), "error"); } });
+  ui.els.editProfile.addEventListener("click", () => { ui.els.modalInput.value = currentUser?.displayName || ""; ui.els.modal.classList.remove("hidden"); });
+  ui.els.closeModal.addEventListener("click", () => ui.els.modal.classList.add("hidden"));
+  ui.els.deleteConversation.addEventListener("click", deleteConversation);
+  ui.els.composer.addEventListener("submit", sendMessage);
+  ui.els.messageInput.addEventListener("keydown", event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); ui.els.composer.requestSubmit(); } });
+  ui.els.messageInput.addEventListener("input", () => { ui.els.messageInput.style.height = "auto"; ui.els.messageInput.style.height = `${Math.min(ui.els.messageInput.scrollHeight, 140)}px`; if (activeConversationId) { sendTypingSignal(activeConversationId, currentUser.uid, true); clearTimeout(typingTimer); typingTimer = setTimeout(() => sendTypingSignal(activeConversationId, currentUser.uid, false), 1100); } });
+  ui.els.emojiButton.addEventListener("click", () => ui.els.emojiPicker.classList.toggle("hidden"));
+  ui.els.emojiPicker.replaceChildren(...emojis.map(emoji => { const button = document.createElement("button"); button.type = "button"; button.textContent = emoji; button.addEventListener("click", () => { ui.els.messageInput.value += emoji; ui.els.messageInput.focus(); }); return button; }));
+  ui.els.backButton.addEventListener("click", () => document.body.classList.remove("chat-open"));
+  ui.els.menuButton?.addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
+}
+
+function beginSession(user) {
+  currentUser = user;
+  ui.showAuth(false);
+  ui.els.currentName.replaceChildren(ui.nameMarkup(user.displayName || "Nexus user"));
+  ui.els.currentEmail.textContent = user.email || "";
+  ui.avatar(user.displayName, ui.els.currentAvatar);
+  setPresence(user).catch(error => ui.toast(authError(error), "error"));
+  loadUsers().then(watchConversations).catch(error => ui.toast(authError(error), "error"));
+  initPubNub(user, { onMessage: handleIncomingMessage, onTyping: handleTyping });
+}
+
+onAuthStateChanged(auth, user => { if (user) beginSession(user); else { currentUser = null; ui.showAuth(true); } });
+bindEvents();
+
+// Lightweight ambient particle field, independent from the app data flow.
+const canvas = document.querySelector("#particles");
+const context = canvas.getContext("2d");
+const particles = Array.from({ length: 42 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.6 + .4, vx: (Math.random() - .5) * .00025, vy: (Math.random() - .5) * .00025 }));
+function drawParticles() { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); context.clearRect(0, 0, innerWidth, innerHeight); context.fillStyle = "rgba(168,85,247,.42)"; particles.forEach(particle => { particle.x = (particle.x + particle.vx + 1) % 1; particle.y = (particle.y + particle.vy + 1) % 1; context.beginPath(); context.arc(particle.x * innerWidth, particle.y * innerHeight, particle.r, 0, Math.PI * 2); context.fill(); }); requestAnimationFrame(drawParticles); }
+addEventListener("resize", drawParticles);
+drawParticles();
+
+
+</script>
+</body>
+</html>
