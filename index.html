@@ -62,7 +62,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged, updateProfile
+  signOut, onAuthStateChanged, updateProfile, sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getDatabase, ref, set, get, push, update, remove,
@@ -99,6 +99,7 @@ const db = getDatabase(app);
 async function register(email, password, displayName) {
   const result = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(result.user, { displayName });
+  await sendEmailVerification(result.user);
   return result.user;
 }
 
@@ -571,8 +572,20 @@ function bindEvents() {
     event.preventDefault();
     ui.els.authError.textContent = "";
     try {
-      if (signUpMode) await register(ui.els.emailInput.value.trim(), ui.els.passwordInput.value, ui.els.nameInput.value.trim() || "Nexus user");
-      else await login(ui.els.emailInput.value.trim(), ui.els.passwordInput.value);
+      if (signUpMode) {
+        await register(ui.els.emailInput.value.trim(), ui.els.passwordInput.value, ui.els.nameInput.value.trim() || "Nexus user");
+        await signOut(auth);
+        ui.els.authError.style.color = "var(--success)";
+        ui.els.authError.textContent = "Account created! Check your email and click the verification link before signing in.";
+      } else {
+        const user = await login(ui.els.emailInput.value.trim(), ui.els.passwordInput.value);
+        if (!user.emailVerified) {
+          await signOut(auth);
+          await sendEmailVerification(user);
+          ui.els.authError.style.color = "#f59e0b";
+          ui.els.authError.textContent = "Please verify your email first. We've resent the verification link — check your inbox.";
+        }
+      }
     } catch (error) { ui.els.authError.textContent = authError(error); }
   });
   ui.els.logoutButton.addEventListener("click", () => logout().catch(error => ui.toast(authError(error), "error")));
@@ -603,7 +616,14 @@ function beginSession(user) {
   initPubNub(user, { onMessage: handleIncomingMessage, onTyping: handleTyping });
 }
 
-onAuthStateChanged(auth, user => { if (user) beginSession(user); else { currentUser = null; ui.showAuth(true); } });
+onAuthStateChanged(auth, user => {
+  if (user && user.emailVerified) {
+    beginSession(user);
+  } else {
+    currentUser = null;
+    ui.showAuth(true);
+  }
+});
 bindEvents();
 
 // Lightweight ambient particle field, independent from the app data flow.
