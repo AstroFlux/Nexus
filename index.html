@@ -21,7 +21,7 @@
   --glow:rgba(138,43,226,.3);--glow2:rgba(138,43,226,.08);
   font-family:'Inter',system-ui,sans-serif;color:var(--text);
 }
-html,body{height:100%;background:var(--bg);overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+html{height:100%;background:var(--bg)}body{height:100%;background:var(--bg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow:hidden}
 button,input,textarea{font:inherit}
 button{cursor:pointer;color:inherit;border:0;background:none}
 
@@ -73,7 +73,7 @@ body::after{
 /* ════════════════════════════════════════
    AUTH SCREEN — cinematic entrance
 ════════════════════════════════════════ */
-.auth-screen{display:grid;place-items:center;padding:20px;min-height:100vh}
+.auth-screen{display:grid;place-items:center;padding:20px;min-height:100vh;overflow-y:auto}
 
 .auth-card{
   width:min(450px,100%);padding:56px 48px 48px;border-radius:32px;
@@ -197,7 +197,8 @@ input:focus,textarea:focus{
 ════════════════════════════════════════ */
 .app-screen{
   display:grid;grid-template-columns:285px 1fr;
-  padding:12px;gap:12px;height:100vh;
+  padding:12px;gap:12px;height:100vh;max-height:100vh;
+  overflow:hidden;
   animation:appReveal .6s cubic-bezier(.16,1,.3,1) both;
 }
 @keyframes appReveal{
@@ -598,8 +599,8 @@ input:focus,textarea:focus{
    LANDING PAGE
 ════════════════════════════════════════════════════════ */
 .landing-screen{
-  min-height:100vh;overflow-y:auto;overflow-x:hidden;
-  background:var(--bg);position:relative;z-index:1;
+  position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;
+  background:var(--bg);z-index:2;
 }
 .landing-screen.hidden{display:none!important}
 
@@ -628,9 +629,9 @@ input:focus,textarea:focus{
 
 /* Hero */
 .hero{
-  min-height:100vh;display:flex;flex-direction:column;
+  min-height:100svh;min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  text-align:center;padding:120px 24px 80px;position:relative;
+  text-align:center;padding:110px 24px 80px;position:relative;
 }
 /* hero glow */
 .hero::before{
@@ -735,7 +736,7 @@ input:focus,textarea:focus{
 
 /* Features */
 .features{
-  padding:100px 48px;text-align:center;
+  padding:80px 48px;text-align:center;
   border-top:1px solid var(--bd);position:relative;
 }
 .features::before{
@@ -780,7 +781,7 @@ input:focus,textarea:focus{
 
 /* CTA section */
 .land-cta-section{
-  padding:100px 24px;text-align:center;
+  padding:80px 24px;text-align:center;
   border-top:1px solid var(--bd);position:relative;
 }
 .land-cta-section::before{
@@ -1462,11 +1463,13 @@ function showLanding(){
   document.getElementById('landing').classList.remove('hidden');
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-screen').classList.add('hidden');
+  document.body.style.overflow='hidden'; // landing handles its own scroll
 }
 function goToAuth(signUp){
   document.getElementById('landing').classList.add('hidden');
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('app-screen').classList.add('hidden');
+  document.body.style.overflow='hidden';
   // pre-select sign up or sign in mode
   if(signUp){
     const tabs = document.querySelectorAll('.auth-tab');
