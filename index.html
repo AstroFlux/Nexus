@@ -593,12 +593,323 @@ input:focus,textarea:focus{
 @supports(padding:max(0px)){
   .composer{padding-bottom:max(14px,env(safe-area-inset-bottom))}
 }
+
+/* ════════════════════════════════════════════════════════
+   LANDING PAGE
+════════════════════════════════════════════════════════ */
+.landing-screen{
+  min-height:100vh;overflow-y:auto;overflow-x:hidden;
+  background:var(--bg);position:relative;z-index:1;
+}
+.landing-screen.hidden{display:none!important}
+
+/* Nav */
+.land-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 48px;
+  background:rgba(5,5,8,.7);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid rgba(138,43,226,.12);
+  animation:navDrop .8s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes navDrop{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
+.land-logo{font-size:1.5rem;font-weight:900;letter-spacing:-1.5px;color:var(--text)}
+.land-logo i{font-style:normal;background:linear-gradient(135deg,var(--ac3),var(--ac));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:slashAura 2.5s ease-in-out infinite}
+.land-logo.compact{font-size:1.1rem;letter-spacing:-1px}
+.land-nav-right{display:flex;align-items:center;gap:16px}
+.land-tag{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.land-signin-btn{
+  padding:9px 22px;border-radius:10px;font-size:.82rem;font-weight:700;
+  background:rgba(138,43,226,.12);border:1px solid var(--bd-ac);color:var(--ac3);
+  transition:all .18s;letter-spacing:.04em;
+}
+.land-signin-btn:hover{background:rgba(138,43,226,.25);color:#fff;transform:translateY(-1px);box-shadow:0 4px 16px rgba(138,43,226,.3)}
+
+/* Hero */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:120px 24px 80px;position:relative;
+}
+/* hero glow */
+.hero::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:900px;height:600px;
+  background:radial-gradient(ellipse,rgba(138,43,226,.13) 0%,transparent 60%);
+  pointer-events:none;animation:heroGlow 6s ease-in-out infinite;
+}
+@keyframes heroGlow{
+  0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}
+  50%{opacity:1;transform:translateX(-50%) scale(1.08)}
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 16px;border-radius:999px;margin-bottom:32px;
+  background:rgba(138,43,226,.1);border:1px solid rgba(138,43,226,.3);
+  font-size:.72rem;font-weight:600;letter-spacing:.06em;color:var(--ac3);
+  animation:heroFadeUp 1s ease .2s both;
+  box-shadow:0 0 20px rgba(138,43,226,.1);
+}
+.hero-badge-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--success);
+  box-shadow:0 0 6px var(--success);
+  animation:pingDot 2s ease-in-out infinite;
+}
+
+.hero-title{
+  font-size:clamp(3rem,8vw,6.5rem);font-weight:900;
+  letter-spacing:-3px;line-height:1.05;margin-bottom:28px;
+  animation:heroFadeUp 1s ease .3s both;color:var(--text);
+}
+.hero-gradient{
+  background:linear-gradient(135deg,var(--ac4) 0%,var(--ac3) 25%,var(--ac) 60%,#6d28d9 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% 100%;
+  animation:gradShift 4s ease-in-out infinite;
+}
+@keyframes gradShift{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+
+.hero-sub{
+  font-size:clamp(.95rem,2vw,1.2rem);color:var(--muted);
+  line-height:1.7;margin-bottom:44px;max-width:560px;
+  animation:heroFadeUp 1s ease .4s both;
+  font-weight:400;
+}
+.hero-br{display:none}
+@media(min-width:600px){.hero-br{display:block}}
+
+.hero-btns{
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  justify-content:center;margin-bottom:52px;
+  animation:heroFadeUp 1s ease .5s both;
+}
+.hero-cta{
+  padding:16px 36px;border-radius:14px;font-size:1rem;font-weight:800;
+  letter-spacing:.04em;color:#fff;
+  background:linear-gradient(130deg,#5008aa,var(--ac) 45%,var(--ac2));
+  background-size:200% 100%;background-position:0% 50%;
+  box-shadow:0 6px 40px rgba(138,43,226,.55),0 1px 0 rgba(255,255,255,.12) inset;
+  transition:all .22s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;
+}
+.hero-cta::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);
+  background-size:200% 100%;background-position:200% 0;transition:background-position .6s;
+}
+.hero-cta:hover{
+  background-position:100% 50%;transform:translateY(-3px) scale(1.02);
+  box-shadow:0 14px 50px rgba(138,43,226,.7);
+}
+.hero-cta:hover::before{background-position:-200% 0}
+.hero-cta:active{transform:scale(.97)}
+.hero-ghost{
+  padding:16px 28px;border-radius:14px;font-size:.95rem;font-weight:700;
+  color:var(--muted);border:1px solid var(--bd);
+  transition:all .18s;letter-spacing:.03em;
+}
+.hero-ghost:hover{border-color:var(--bd-ac);color:var(--text);background:rgba(138,43,226,.07)}
+
+.hero-pills{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+  animation:heroFadeUp 1s ease .6s both;
+}
+.hero-pill{
+  display:flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:999px;
+  background:rgba(255,255,255,.04);border:1px solid var(--bd);
+  font-size:.74rem;font-weight:600;color:var(--muted);
+  transition:all .18s;
+}
+.hero-pill:hover{background:rgba(138,43,226,.08);border-color:var(--bd-ac);color:var(--text)}
+.pill-dot{width:6px;height:6px;border-radius:50%}
+.pill-dot.green{background:var(--success);box-shadow:0 0 6px var(--success)}
+.pill-dot.purple{background:var(--ac2);box-shadow:0 0 6px var(--ac2)}
+.pill-dot.blue{background:#60a5fa;box-shadow:0 0 6px #60a5fa}
+
+@keyframes heroFadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+/* Features */
+.features{
+  padding:100px 48px;text-align:center;
+  border-top:1px solid var(--bd);position:relative;
+}
+.features::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:600px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(138,43,226,.4),transparent);
+}
+.feat-label{
+  font-size:.65rem;font-weight:800;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ac2);margin-bottom:16px;
+}
+.feat-title{
+  font-size:clamp(2rem,5vw,3.5rem);font-weight:900;
+  letter-spacing:-2px;margin-bottom:64px;color:var(--text);
+}
+.feat-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:20px;max-width:1000px;margin:0 auto;text-align:left;
+}
+.feat-card{
+  padding:32px 28px;border-radius:24px;
+  background:rgba(8,8,15,.8);
+  border:1px solid var(--bd);
+  transition:all .25s cubic-bezier(.16,1,.3,1);
+  position:relative;overflow:hidden;
+}
+.feat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(138,43,226,.3),transparent);
+  opacity:0;transition:opacity .25s;
+}
+.feat-card:hover{
+  border-color:var(--bd-ac);
+  transform:translateY(-6px);
+  box-shadow:0 20px 50px rgba(0,0,0,.4),0 0 0 1px rgba(138,43,226,.1);
+  background:rgba(10,10,20,.9);
+}
+.feat-card:hover::before{opacity:1}
+.feat-icon{font-size:2rem;margin-bottom:20px;display:block}
+.feat-card h3{font-size:1.05rem;font-weight:800;margin-bottom:10px;letter-spacing:-.3px}
+.feat-card p{font-size:.85rem;color:var(--muted);line-height:1.65}
+
+/* CTA section */
+.land-cta-section{
+  padding:100px 24px;text-align:center;
+  border-top:1px solid var(--bd);position:relative;
+}
+.land-cta-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(138,43,226,.08),transparent 60%);
+  pointer-events:none;
+}
+.land-cta-inner{position:relative}
+.land-cta-section h2{
+  font-size:clamp(2rem,5vw,3.5rem);font-weight:900;
+  letter-spacing:-2px;margin-bottom:14px;
+}
+.land-cta-section p{color:var(--muted);font-size:1rem;margin-bottom:36px}
+
+/* Footer */
+.land-footer{
+  padding:32px 48px;border-top:1px solid var(--bd);
+  display:flex;align-items:center;gap:16px;
+  color:var(--muted);font-size:.78rem;
+}
+
+/* Landing → Auth transition */
+#auth-screen{animation:authSlideIn .6s cubic-bezier(.16,1,.3,1) both}
+@keyframes authSlideIn{
+  from{opacity:0;transform:scale(.96) translateY(20px)}
+  to{opacity:1;transform:none}
+}
+
+/* Mobile nav */
+@media(max-width:600px){
+  .land-nav{padding:16px 20px}
+  .land-tag{display:none}
+  .hero{padding:100px 20px 60px}
+  .hero-title{letter-spacing:-2px}
+  .features{padding:70px 20px}
+  .feat-grid{grid-template-columns:1fr}
+  .land-footer{padding:24px 20px;flex-direction:column;gap:8px;text-align:center}
+}
 </style>
   <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.8.2.0.min.js"></script>
 </head>
 <body>
   <canvas id="particles" aria-hidden="true"></canvas>
-  <main id="auth-screen" class="screen auth-screen">
+
+  <!-- ══════════════ LANDING PAGE ══════════════ -->
+  <div id="landing" class="landing-screen">
+
+    <!-- Nav -->
+    <nav class="land-nav">
+      <div class="land-logo"><span>Ne</span><i>/</i><span>xus</span></div>
+      <div class="land-nav-right">
+        <span class="land-tag">by AstroFlux</span>
+        <button class="land-signin-btn" id="land-signin">Sign in</button>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Real-time messaging — reimagined
+      </div>
+      <h1 class="hero-title">
+        The future of<br/>
+        <span class="hero-gradient">private messaging</span><br/>
+        is here.
+      </h1>
+      <p class="hero-sub">
+        Nexus connects people instantly. No noise, no clutter —<br class="hero-br"/>
+        just seamless, beautiful, real-time conversations.
+      </p>
+      <div class="hero-btns">
+        <button class="hero-cta" id="land-getstarted">Get started free →</button>
+        <button class="hero-ghost" id="land-learnmore">See how it works ↓</button>
+      </div>
+      <!-- floating pill stats -->
+      <div class="hero-pills">
+        <div class="hero-pill"><span class="pill-dot green"></span>End-to-end encrypted</div>
+        <div class="hero-pill"><span class="pill-dot purple"></span>Real-time delivery</div>
+        <div class="hero-pill"><span class="pill-dot blue"></span>Zero ads, ever</div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+      <div class="feat-label">Why Nexus</div>
+      <h2 class="feat-title">Built different.</h2>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-icon">⚡</div>
+          <h3>Instant delivery</h3>
+          <p>Messages arrive in milliseconds. Powered by PubNub's global real-time network — no delays, ever.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🔒</div>
+          <h3>Secure by default</h3>
+          <p>Your account is protected by Firebase Authentication. Only you can access your conversations.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">✦</div>
+          <h3>Premium experience</h3>
+          <p>Every interaction is crafted to feel alive. Smooth animations, beautiful UI, zero compromise.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🌐</div>
+          <h3>Works everywhere</h3>
+          <p>Nexus runs in your browser — desktop, tablet, mobile. No app download required.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA section -->
+    <section class="land-cta-section">
+      <div class="land-cta-inner">
+        <h2>Ready to connect?</h2>
+        <p>Join Nexus for free. No credit card, no catch.</p>
+        <button class="hero-cta" id="land-getstarted2">Create your account →</button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="land-footer">
+      <div class="land-logo compact"><span>Ne</span><i>/</i><span>xus</span></div>
+      <span>by AstroFlux · Built with 💜</span>
+    </footer>
+
+  </div>
+
+  <main id="auth-screen" class="screen auth-screen hidden">
     <section class="auth-card glass-panel">
       <div class="brand"><span>Ne</span><i>/</i><span>xus</span></div>
       <p class="eyebrow">by AstroFlux</p>
@@ -1146,6 +1457,32 @@ function searchUsers(value) {
   ui.renderSearchResults(term ? users.filter(user => `${user.displayName} ${user.email}`.toLowerCase().includes(term)).slice(0, 8) : []);
 }
 
+/* ── Landing page ── */
+function showLanding(){
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.add('hidden');
+}
+function goToAuth(signUp){
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('app-screen').classList.add('hidden');
+  // pre-select sign up or sign in mode
+  if(signUp){
+    const tabs = document.querySelectorAll('.auth-tab');
+    tabs.forEach(t=>t.classList.remove('active'));
+    tabs[1]?.classList.add('active');
+    ui.setAuthMode(true);
+  }
+}
+
+document.getElementById('land-getstarted')?.addEventListener('click',()=>goToAuth(true));
+document.getElementById('land-getstarted2')?.addEventListener('click',()=>goToAuth(true));
+document.getElementById('land-signin')?.addEventListener('click',()=>goToAuth(false));
+document.getElementById('land-learnmore')?.addEventListener('click',()=>{
+  document.getElementById('features')?.scrollIntoView({behavior:'smooth'});
+});
+
 function bindEvents() {
   let signUpMode = false;
   ui.setAuthMode(false);
@@ -1186,7 +1523,17 @@ function beginSession(user) {
   initPubNub(user, { onMessage: handleIncomingMessage, onTyping: handleTyping });
 }
 
-onAuthStateChanged(auth, user => { if (user) beginSession(user); else { currentUser = null; ui.showAuth(true); } });
+onAuthStateChanged(auth, user => {
+  if(user){
+    beginSession(user);
+    document.getElementById('landing').classList.add('hidden');
+  } else {
+    currentUser = null;
+    // If coming from landing, stay on landing. If coming from app, show auth.
+    const onLanding = !document.getElementById('landing').classList.contains('hidden');
+    if(!onLanding) ui.showAuth(true);
+  }
+});
 bindEvents();
 
 // ── Cinematic particle network ──
