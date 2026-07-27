@@ -305,6 +305,51 @@ input:focus,textarea:focus{
 .conversations{overflow:auto;flex:1}
 .list-empty{font-size:.78rem;color:var(--muted);padding:10px 8px}
 
+/* Group creation & management */
+.modal-scroll{max-height:230px;overflow-y:auto;margin:10px 0;display:flex;flex-direction:column;gap:2px}
+.pick-row{
+  display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;
+  cursor:pointer;transition:background .15s;
+}
+.pick-row:hover{background:rgba(138,43,226,.08)}
+.pick-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--ac);flex:none}
+.pick-row>div{flex:1;min-width:0}
+.pick-row small{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}
+
+.member-row{
+  display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;
+  transition:background .15s;
+}
+.member-row:hover{background:rgba(138,43,226,.07)}
+.member-row>div{flex:1;min-width:0}
+.member-row small{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}
+.member-remove{
+  color:var(--muted);font-size:.85rem;padding:5px 9px;border-radius:9px;
+  transition:all .15s;flex:none;
+}
+.member-remove:hover{background:rgba(255,95,122,.15);color:var(--danger)}
+
+.group-name-row{display:flex;gap:8px;margin-top:6px}
+.group-name-row input{flex:1}
+.group-name-row button{
+  padding:0 18px;border-radius:13px;flex:none;
+  background:rgba(138,43,226,.18);border:1px solid var(--bd-ac);
+  color:var(--ac3);font-weight:700;font-size:.8rem;transition:all .15s;
+}
+.group-name-row button:hover{background:rgba(138,43,226,.32);color:#fff}
+
+.leave-group-btn{
+  width:100%;margin-top:16px;padding:13px;border-radius:13px;
+  background:rgba(255,95,122,.1);border:1px solid rgba(255,95,122,.28);
+  color:var(--danger);font-weight:700;font-size:.85rem;transition:all .15s;
+}
+.leave-group-btn:hover{background:rgba(255,95,122,.2)}
+
+.sender-name{
+  display:block;font-size:.68rem;font-weight:700;
+  color:var(--ac3);margin-bottom:4px;
+}
+
 .dev-badge{
   font-size:.52rem;letter-spacing:.1em;font-weight:800;
   color:var(--ac3);background:rgba(138,43,226,.2);
@@ -443,7 +488,7 @@ input:focus,textarea:focus{
     0 0 40px rgba(138,43,226,.08);
 }
 .message-bubble p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;line-height:1.54;font-size:.87rem}
-.message-bubble footer{color:rgba(255,255,255,.38);font-size:.59rem;margin-top:5px}
+.message-bubble footer{color:rgba(255,255,255,.38);font-size:.59rem;margin-top:5px;display:flex;align-items:center;gap:4px}
 .message-delete{
   position:absolute;right:-28px;top:5px;
   background:rgba(255,95,122,.1);border:1px solid rgba(255,95,122,.25);
@@ -454,6 +499,48 @@ input:focus,textarea:focus{
 }
 .message-bubble:hover .message-delete{opacity:1}
 .message-delete:hover{background:rgba(255,95,122,.3);transform:scale(1.15)}
+
+/* Reactions */
+.react-button{
+  position:absolute;top:5px;
+  background:rgba(138,43,226,.12);border:1px solid rgba(138,43,226,.3);
+  color:var(--ac3);font-size:.72rem;
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:all .15s;padding:0;
+}
+.own .react-button{right:-28px}
+.other .react-button{left:-28px}
+.message-bubble:hover .react-button{opacity:1}
+.react-button:hover{background:rgba(138,43,226,.3);transform:scale(1.15)}
+.own .message-delete{right:-56px}
+
+.reaction-popover{
+  position:absolute;top:-46px;
+  background:var(--s3);border:1px solid var(--bd-ac);
+  border-radius:16px;padding:6px;display:flex;gap:2px;
+  box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(138,43,226,.06);
+  animation:emojiPop .18s cubic-bezier(.16,1,.3,1);z-index:5;
+}
+.own .reaction-popover{right:0}
+.other .reaction-popover{left:0}
+.reaction-popover button{background:none;padding:6px 7px;border-radius:9px;font-size:1.05rem;transition:all .14s}
+.reaction-popover button:hover{background:rgba(138,43,226,.2);transform:scale(1.25) translateY(-2px)}
+
+.msg-reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.own .msg-reactions{justify-content:flex-end}
+.reaction-pill{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(255,255,255,.06);border:1px solid var(--bd);
+  border-radius:999px;padding:2px 8px 2px 6px;font-size:.72rem;
+  color:var(--muted);transition:all .15s;
+}
+.reaction-pill:hover{background:rgba(138,43,226,.14);border-color:var(--bd-ac);transform:translateY(-1px)}
+.reaction-pill.mine{
+  background:rgba(138,43,226,.22);border-color:rgba(138,43,226,.5);color:var(--ac4);
+  box-shadow:0 0 10px rgba(138,43,226,.15);
+}
+.reaction-pill .count{font-weight:700;font-size:.66rem}
 
 /* Typing */
 .typing{min-height:24px;padding:0 22px 4px;color:var(--muted);font-size:.7rem;font-style:italic}
@@ -579,7 +666,10 @@ input:focus,textarea:focus{
   .messages{padding:16px 12px}
   .composer{padding:8px 10px 14px}
   .message-bubble{max-width:88%}
-  .message-delete{opacity:1;right:-22px}
+  .message-delete,.react-button{opacity:1}
+  .own .message-delete{right:-22px}
+  .own .react-button{right:-50px}
+  .other .react-button{left:-22px}
   .toast{right:12px;bottom:12px;left:12px;text-align:center}
   .chat-open .empty-chat{display:none!important}
   .sidebar-open .chat-area{
@@ -929,7 +1019,7 @@ input:focus,textarea:focus{
 
   <main id="app-screen" class="screen app-screen hidden">
     <aside id="sidebar" class="sidebar glass-panel">
-      <header class="sidebar-header"><div class="brand compact"><span>Ne</span><i>/</i><span>xus</span></div><button id="logout-button" class="icon-button" title="Sign out">↪</button></header>
+      <header class="sidebar-header"><div class="brand compact"><span>Ne</span><i>/</i><span>xus</span></div><span><button id="new-group-button" class="icon-button" title="New group">＋</button><button id="logout-button" class="icon-button" title="Sign out">↪</button></span></header>
       <section class="profile-row"><span id="current-avatar" class="avatar"></span><div><strong id="current-name"></strong><small id="current-email"></small></div><button id="edit-profile" class="icon-button" title="Edit profile">✎</button></section>
       <div class="search-wrap"><span>⌕</span><input id="search-input" placeholder="Find someone" autocomplete="off"></div>
       <div id="search-results" class="search-results"></div>
@@ -939,7 +1029,7 @@ input:focus,textarea:focus{
     <section class="chat-area">
       <div id="empty-chat" class="empty-chat"><div class="brand"><span>Ne</span><i>/</i><span>xus</span></div><h2>Make a connection.</h2><p>Select a conversation or find someone new.</p></div>
       <div id="chat-view" class="chat-view hidden">
-        <header class="chat-header"><button id="back-button" class="icon-button mobile-only" title="Back">‹</button><span id="chat-avatar" class="avatar"></span><div class="chat-heading"><h2 id="chat-name"></h2><span id="chat-status" class="status"><i></i> Offline</span></div><button id="delete-conversation" class="icon-button danger-button" title="Delete conversation">⌫</button></header>
+        <header class="chat-header"><button id="back-button" class="icon-button mobile-only" title="Back">‹</button><span id="chat-avatar" class="avatar"></span><div class="chat-heading"><h2 id="chat-name"></h2><span id="chat-status" class="status"><i></i> Offline</span></div><button id="members-button" class="icon-button hidden" title="Manage group">👥</button><button id="delete-conversation" class="icon-button danger-button" title="Delete conversation">⌫</button></header>
         <div id="messages" class="messages" aria-live="polite"></div>
         <div id="typing" class="typing"></div>
         <form id="composer" class="composer"><div class="composer-input"><button id="emoji-button" type="button" title="Add emoji">☺</button><textarea id="message-input" rows="1" placeholder="Write a message..." maxlength="4000"></textarea><div id="emoji-picker" class="emoji-picker hidden"></div></div><button id="send-button" class="send-button" type="submit" title="Send message">↑</button></form>
@@ -948,6 +1038,35 @@ input:focus,textarea:focus{
   </main>
 
   <div id="profile-modal" class="modal hidden"><form id="profile-form" class="modal-card glass-panel"><button id="close-modal" class="modal-close" type="button" title="Close">×</button><h2>Edit profile</h2><label>Display name<input id="profile-name" required maxlength="40"></label><button class="primary-button" type="submit">Save changes</button></form></div>
+
+  <div id="group-modal" class="modal hidden">
+    <form id="group-form" class="modal-card glass-panel">
+      <button id="close-group-modal" class="modal-close" type="button" title="Close">×</button>
+      <h2>New group</h2>
+      <label>Group name<input id="group-name-input" required maxlength="60" placeholder="e.g. Weekend Crew"></label>
+      <label>Add members<input id="group-member-search" placeholder="Search people" autocomplete="off"></label>
+      <div id="group-member-list" class="modal-scroll"></div>
+      <button class="primary-button" type="submit">Create group</button>
+    </form>
+  </div>
+
+  <div id="manage-group-modal" class="modal hidden">
+    <div class="modal-card glass-panel">
+      <button id="close-manage-modal" class="modal-close" type="button" title="Close">×</button>
+      <h2>Manage group</h2>
+      <form id="rename-group-form" class="group-name-row">
+        <input id="manage-name-input" required maxlength="60">
+        <button type="submit">Save</button>
+      </form>
+      <div class="section-label">Members</div>
+      <div id="manage-members-list" class="modal-scroll"></div>
+      <div class="section-label">Add people</div>
+      <input id="manage-add-search" placeholder="Search people" autocomplete="off">
+      <div id="manage-add-results" class="modal-scroll"></div>
+      <button id="leave-group-button" class="leave-group-btn" type="button">Leave group</button>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="status"></div>
   <script type="module">
 
@@ -1028,11 +1147,13 @@ let listenerAdded = false;
 // Module-level state used by the message listener.
 let onMessageArrived = null;   // callback(messageObj)
 let onTypingArrived = null;    // callback({fromUid, isTyping})
+let onReactionArrived = null;  // callback({conversationId, messageKey, uid, emoji})
 
 function initPubNub(user, handlers) {
   currentUser = user;
   onMessageArrived = handlers.onMessage;
   onTypingArrived = handlers.onTyping;
+  onReactionArrived = handlers.onReaction;
 
   if (!pn) {
     pn = new PubNub({
@@ -1056,8 +1177,11 @@ function initPubNub(user, handlers) {
       signal: (ev) => {
         const sig = ev.message;
         if (!sig) return;
-        if (sig.type === "typing" && sig.fromUid !== currentUser.uid) {
+        if (sig.fromUid === currentUser.uid || sig.uid === currentUser.uid) return;
+        if (sig.type === "typing") {
           if (onTypingArrived) onTypingArrived(sig);
+        } else if (sig.type === "reaction") {
+          if (onReactionArrived) onReactionArrived(sig);
         }
       }
     });
@@ -1090,6 +1214,14 @@ function sendTypingSignal(conversationId, fromUid, isTyping) {
   pn.signal({
     channel: conversationId,
     message: { type: "typing", fromUid, isTyping }
+  });
+}
+
+function sendReactionSignal(conversationId, messageKey, uid, emoji) {
+  if (!pn) return;
+  pn.signal({
+    channel: conversationId,
+    message: { type: "reaction", conversationId, messageKey, uid, emoji }
   });
 }
 
@@ -1136,8 +1268,26 @@ const els = {
   modal: $("#profile-modal"),
   modalForm: $("#profile-form"),
   modalInput: $("#profile-name"),
-  closeModal: $("#close-modal")
+  closeModal: $("#close-modal"),
+  newGroupButton: $("#new-group-button"),
+  groupModal: $("#group-modal"),
+  groupForm: $("#group-form"),
+  groupNameInput: $("#group-name-input"),
+  groupMemberSearch: $("#group-member-search"),
+  groupMemberList: $("#group-member-list"),
+  closeGroupModal: $("#close-group-modal"),
+  membersButton: $("#members-button"),
+  manageModal: $("#manage-group-modal"),
+  renameGroupForm: $("#rename-group-form"),
+  manageNameInput: $("#manage-name-input"),
+  manageMembersList: $("#manage-members-list"),
+  manageAddSearch: $("#manage-add-search"),
+  manageAddResults: $("#manage-add-results"),
+  closeManageModal: $("#close-manage-modal"),
+  leaveGroupButton: $("#leave-group-button")
 };
+
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 function showAuth(show) {
   els.authScreen.classList.toggle("hidden", !show);
@@ -1202,8 +1352,8 @@ function renderConversations(items, activeId) {
   });
 }
 
-function renderSearchResults(users) {
-  els.searchResults.replaceChildren();
+function renderSearchResults(users, container = els.searchResults) {
+  container.replaceChildren();
   users.forEach(user => {
     const button = document.createElement("button");
     button.className = "search-result";
@@ -1218,13 +1368,73 @@ function renderSearchResults(users) {
     email.textContent = user.email || "";
     copy.append(name, email);
     button.append(avatarEl, copy);
-    els.searchResults.append(button);
+    container.append(button);
   });
 }
 
-function setChatUser(user) {
-  els.chatName.replaceChildren(nameMarkup(user.displayName));
-  avatar(user.displayName, els.chatAvatar);
+function renderMemberPicker(users, selectedUids) {
+  els.groupMemberList.replaceChildren();
+  if (!users.length) {
+    const empty = document.createElement("p");
+    empty.className = "list-empty";
+    empty.textContent = "No one found";
+    els.groupMemberList.append(empty);
+    return;
+  }
+  users.forEach(user => {
+    const row = document.createElement("label");
+    row.className = "pick-row";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.uid = user.uid;
+    checkbox.checked = selectedUids.has(user.uid);
+    const copy = document.createElement("div");
+    const name = document.createElement("strong");
+    name.append(nameMarkup(user.displayName));
+    const email = document.createElement("small");
+    email.textContent = user.email || "";
+    copy.append(name, email);
+    row.append(checkbox, copy);
+    els.groupMemberList.append(row);
+  });
+}
+
+function renderGroupMembersList(memberUsers, onRemove) {
+  els.manageMembersList.replaceChildren();
+  memberUsers.forEach(user => {
+    const row = document.createElement("div");
+    row.className = "member-row";
+    const avatarEl = document.createElement("span");
+    avatarEl.className = "avatar tiny";
+    avatar(user.displayName, avatarEl);
+    const copy = document.createElement("div");
+    const name = document.createElement("strong");
+    name.append(nameMarkup(user.displayName));
+    copy.append(name);
+    row.append(avatarEl, copy);
+    if (user.uid !== currentAppUid) {
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "member-remove";
+      removeBtn.title = "Remove from group";
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", () => onRemove(user.uid));
+      row.append(removeBtn);
+    }
+    els.manageMembersList.append(row);
+  });
+}
+
+function setChatUser(peer, conversationData) {
+  els.chatName.replaceChildren(nameMarkup(peer.displayName));
+  avatar(peer.displayName, els.chatAvatar);
+  const isGroup = !!conversationData?.isGroup;
+  els.membersButton.classList.toggle("hidden", !isGroup);
+  if (isGroup) {
+    const count = Object.keys(conversationData.participants || {}).length;
+    els.chatStatus.className = "status";
+    els.chatStatus.innerHTML = `<i></i>${count} member${count === 1 ? "" : "s"}`;
+  }
 }
 
 function addDateSeparator(label) {
@@ -1236,17 +1446,89 @@ function addDateSeparator(label) {
   els.messages.append(separator);
 }
 
-function addMessage(message, own, onDelete) {
+function buildReactionPopover(row, messageKey, onReact) {
+  const existing = row.querySelector(".reaction-popover");
+  if (existing) { existing.remove(); return; }
+  const popover = document.createElement("div");
+  popover.className = "reaction-popover";
+  REACTION_EMOJIS.forEach(emoji => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = emoji;
+    btn.addEventListener("click", () => {
+      onReact(messageKey, emoji);
+      popover.remove();
+    });
+    popover.append(btn);
+  });
+  row.querySelector(".message-bubble").append(popover);
+  const closeOnOutside = (event) => {
+    if (!popover.contains(event.target)) {
+      popover.remove();
+      document.removeEventListener("click", closeOnOutside, true);
+    }
+  };
+  setTimeout(() => document.addEventListener("click", closeOnOutside, true), 0);
+}
+
+function renderReactions(bubble, reactions, currentUid, messageKey, onReact) {
+  let container = bubble.querySelector(".msg-reactions");
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "msg-reactions";
+    bubble.append(container);
+  }
+  container.replaceChildren();
+  const grouped = {};
+  Object.entries(reactions || {}).forEach(([uid, emoji]) => {
+    if (!emoji) return;
+    (grouped[emoji] = grouped[emoji] || []).push(uid);
+  });
+  Object.entries(grouped).forEach(([emoji, uids]) => {
+    const pill = document.createElement("button");
+    pill.type = "button";
+    pill.className = `reaction-pill ${uids.includes(currentUid) ? "mine" : ""}`;
+    const glyph = document.createElement("span");
+    glyph.textContent = emoji;
+    const count = document.createElement("span");
+    count.className = "count";
+    count.textContent = uids.length;
+    pill.append(glyph, count);
+    pill.addEventListener("click", () => onReact(messageKey, emoji));
+    container.append(pill);
+  });
+}
+
+function addMessage(message, own, handlers) {
+  const { onDelete, onReact, reactions, senderName } = handlers;
   const row = document.createElement("article");
   row.className = `message-row ${own ? "own" : "other"}`;
   row.dataset.messageKey = message.key;
+  row.dataset.createdAt = message.createdAt;
   const bubble = document.createElement("div");
   bubble.className = "message-bubble";
+  if (senderName) {
+    const label = document.createElement("span");
+    label.className = "sender-name";
+    label.append(nameMarkup(senderName));
+    bubble.append(label);
+  }
   const text = document.createElement("p");
   text.textContent = message.text;
   const meta = document.createElement("footer");
-  meta.textContent = new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const timeSpan = document.createElement("span");
+  timeSpan.textContent = new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  meta.append(timeSpan);
   bubble.append(text, meta);
+
+  const reactButton = document.createElement("button");
+  reactButton.className = "react-button";
+  reactButton.type = "button";
+  reactButton.title = "React";
+  reactButton.textContent = "☺";
+  reactButton.addEventListener("click", () => buildReactionPopover(row, message.key, onReact));
+  bubble.append(reactButton);
+
   if (own) {
     const deleteButton = document.createElement("button");
     deleteButton.className = "message-delete";
@@ -1258,6 +1540,7 @@ function addMessage(message, own, onDelete) {
   }
   row.append(bubble);
   els.messages.append(row);
+  renderReactions(bubble, reactions, message.uid === currentAppUid ? currentAppUid : currentAppUid, message.key, onReact);
 }
 
 function scrollMessages() {
@@ -1272,7 +1555,17 @@ function toast(message, kind = "success") {
   toastTimer = setTimeout(() => els.toast.className = "toast", 3200);
 }
 
+// current user's uid, set by app.js so ui helpers can determine "mine" reactions
+let currentAppUid = null;
+function setCurrentAppUid(uid) { currentAppUid = uid; }
 
+// Update a single message's reactions in the DOM (called on realtime reaction events)
+function updateMessageReactions(messageKey, reactions, onReact) {
+  const row = els.messages.querySelector(`[data-message-key="${CSS.escape(messageKey)}"]`);
+  if (!row) return;
+  const bubble = row.querySelector(".message-bubble");
+  renderReactions(bubble, reactions, currentAppUid, messageKey, onReact);
+}
 
 // Create ui namespace so app.js can use ui.els, ui.toast, etc.
 const ui = {
@@ -1284,11 +1577,15 @@ const ui = {
   nameMarkup,
   renderConversations,
   renderSearchResults,
+  renderMemberPicker,
+  renderGroupMembersList,
   setChatUser,
   addDateSeparator,
   addMessage,
   scrollMessages,
-  toast
+  toast,
+  setCurrentAppUid,
+  updateMessageReactions
 };
 
 // ── app ──
@@ -1297,16 +1594,32 @@ const ui = {
 let currentUser = null;
 let activeConversationId = null;
 let activeOtherUser = null;
+let activeConversationData = null;
 let conversations = [];
 let users = [];
 let conversationStop = null;
 let presenceStop = null;
+let reactionsStop = null;
 let typingTimer;
 let lastDateShown = "";
+let activeReactions = {};
 const emojis = ["😀", "😂", "😍", "🥳", "😎", "🤔", "😭", "😅", "🙌", "👏", "❤️", "🔥", "✨", "🎉", "👍", "👀", "💜", "✅"];
 
 const conversationIdFor = (first, second) => [first, second].sort().join("_");
 const userRecord = (uid) => users.find(user => user.uid === uid);
+
+function resolveDisplayName(uid) {
+  if (currentUser && uid === currentUser.uid) return currentUser.displayName || "You";
+  return userRecord(uid)?.displayName || "Someone";
+}
+
+function conversationPeer(id, value) {
+  if (value.isGroup) {
+    return { isGroup: true, id, displayName: value.name || "Unnamed group" };
+  }
+  const otherUid = Object.keys(value.participants || {}).find(uid => uid !== currentUser.uid);
+  return userRecord(otherUid) || { uid: otherUid, displayName: "Unknown user", email: "" };
+}
 
 function dateLabel(timestamp) {
   const date = new Date(timestamp);
@@ -1328,8 +1641,7 @@ function showDateIfNeeded(timestamp) {
 
 function currentConversationItems(data) {
   return Object.entries(data || {}).filter(([, value]) => value?.participants?.[currentUser.uid] === true).map(([id, value]) => {
-    const otherUid = Object.keys(value.participants).find(uid => uid !== currentUser.uid);
-    return { id, data: value, user: userRecord(otherUid) || { uid: otherUid, displayName: "Unknown user", email: "" } };
+    return { id, data: value, user: conversationPeer(id, value) };
   }).sort((a, b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0));
 }
 
@@ -1338,6 +1650,17 @@ function watchConversations() {
   conversationStop = onValue(ref(db, "conversations"), snapshot => {
     conversations = currentConversationItems(snapshot.val());
     ui.renderConversations(conversations, activeConversationId);
+    if (activeConversationId) {
+      const active = conversations.find(item => item.id === activeConversationId);
+      if (active) {
+        activeConversationData = active.data;
+        activeOtherUser = active.user;
+        ui.setChatUser(activeOtherUser, activeConversationData);
+      } else {
+        // We were removed from this conversation (e.g. someone else removed us, or it was deleted).
+        closeActiveConversation();
+      }
+    }
   });
 }
 
@@ -1358,42 +1681,73 @@ async function startConversation(otherUser) {
 function handleIncomingMessage(message) {
   if (message.conversationId !== activeConversationId) return;
   showDateIfNeeded(message.createdAt);
-  ui.addMessage(message, false, deleteOwnMessage);
+  const senderName = activeConversationData?.isGroup ? resolveDisplayName(message.uid) : null;
+  ui.addMessage(message, false, { onDelete: deleteOwnMessage, onReact: reactToMessage, reactions: activeReactions[message.key], senderName });
   ui.scrollMessages();
 }
 
 function handleTyping(signal) {
   if (signal.conversationId && signal.conversationId !== activeConversationId) return;
-  ui.els.typing.textContent = signal.isTyping && activeOtherUser ? `${activeOtherUser.displayName} is typing...` : "";
+  const typerName = activeConversationData?.isGroup ? resolveDisplayName(signal.fromUid) : activeOtherUser?.displayName;
+  ui.els.typing.textContent = signal.isTyping && typerName ? `${typerName} is typing...` : "";
   if (signal.isTyping) {
     clearTimeout(typingTimer);
     typingTimer = setTimeout(() => ui.els.typing.textContent = "", 2400);
   }
 }
 
+function handleReaction(signal) {
+  if (signal.conversationId !== activeConversationId) return;
+  activeReactions[signal.messageKey] = activeReactions[signal.messageKey] || {};
+  if (signal.emoji) activeReactions[signal.messageKey][signal.uid] = signal.emoji;
+  else delete activeReactions[signal.messageKey][signal.uid];
+  ui.updateMessageReactions(signal.messageKey, activeReactions[signal.messageKey], reactToMessage);
+}
+
 async function openConversation(item) {
   if (activeConversationId && activeConversationId !== item.id) unsubscribeFromConversation(activeConversationId);
   activeConversationId = item.id;
   activeOtherUser = item.user;
+  activeConversationData = item.data;
   lastDateShown = "";
+  activeReactions = {};
   ui.els.emptyChat.classList.add("hidden");
   ui.els.chatView.classList.remove("hidden");
-  ui.setChatUser(activeOtherUser);
+  ui.setChatUser(activeOtherUser, activeConversationData);
   ui.renderConversations(conversations, activeConversationId);
   ui.els.messages.replaceChildren();
   ui.els.typing.textContent = "";
   subscribeToConversation(activeConversationId);
-  watchPresence(activeOtherUser.uid);
+  if (activeConversationData?.isGroup) {
+    if (presenceStop) { presenceStop(); presenceStop = null; }
+  } else {
+    watchPresence(activeOtherUser.uid);
+  }
 
-  // History is loaded once when opening a conversation; messages never use onValue.
+  // Reactions and read status live only in memory / over PubNub signals — there's
+  // no backend to load them from, so history starts with a clean slate each time
+  // and reconciles live if the other person is currently connected too.
   const snapshot = await get(ref(db, `messages/${activeConversationId}`));
   const history = Object.entries(snapshot.val() || {}).map(([key, message]) => ({ key, ...message })).sort((a, b) => a.createdAt - b.createdAt);
   history.forEach(message => {
     showDateIfNeeded(message.createdAt);
-    ui.addMessage(message, message.uid === currentUser.uid, deleteOwnMessage);
+    const own = message.uid === currentUser.uid;
+    const senderName = !own && activeConversationData?.isGroup ? resolveDisplayName(message.uid) : null;
+    ui.addMessage(message, own, { onDelete: deleteOwnMessage, onReact: reactToMessage, reactions: activeReactions[message.key], senderName });
   });
   ui.scrollMessages();
   document.body.classList.add("chat-open");
+}
+
+function closeActiveConversation() {
+  if (activeConversationId) unsubscribeFromConversation(activeConversationId);
+  if (presenceStop) { presenceStop(); presenceStop = null; }
+  activeConversationId = null;
+  activeOtherUser = null;
+  activeConversationData = null;
+  ui.els.chatView.classList.add("hidden");
+  ui.els.emptyChat.classList.remove("hidden");
+  document.body.classList.remove("chat-open");
 }
 
 function watchPresence(uid) {
@@ -1405,6 +1759,19 @@ function watchPresence(uid) {
   });
 }
 
+function reactToMessage(messageKey, emoji) {
+  if (!activeConversationId || !currentUser) return;
+  const current = activeReactions[messageKey]?.[currentUser.uid];
+  const nextEmoji = current === emoji ? null : emoji;
+  activeReactions[messageKey] = activeReactions[messageKey] || {};
+  if (nextEmoji) activeReactions[messageKey][currentUser.uid] = nextEmoji;
+  else delete activeReactions[messageKey][currentUser.uid];
+  ui.updateMessageReactions(messageKey, activeReactions[messageKey], reactToMessage);
+  // No backend to persist to — this is broadcast live to whoever is currently
+  // subscribed to the conversation channel, same as typing indicators.
+  sendReactionSignal(activeConversationId, messageKey, currentUser.uid, nextEmoji);
+}
+
 async function sendMessage(event) {
   event.preventDefault();
   const text = ui.els.messageInput.value.trim();
@@ -1412,7 +1779,7 @@ async function sendMessage(event) {
   const messageRef = push(ref(db, `messages/${activeConversationId}`));
   const message = { key: messageRef.key, conversationId: activeConversationId, uid: currentUser.uid, text, createdAt: Date.now() };
   showDateIfNeeded(message.createdAt);
-  ui.addMessage(message, true, deleteOwnMessage);
+  ui.addMessage(message, true, { onDelete: deleteOwnMessage, onReact: reactToMessage, reactions: null });
   ui.scrollMessages();
   ui.els.messageInput.value = "";
   ui.els.messageInput.style.height = "auto";
@@ -1429,22 +1796,67 @@ async function sendMessage(event) {
 async function deleteOwnMessage(key, row) {
   if (!activeConversationId) return;
   await remove(ref(db, `messages/${activeConversationId}/${key}`));
+  delete activeReactions[key];
   row.remove();
 }
 
 async function deleteConversation() {
-  if (!activeConversationId || !confirm("Delete this conversation for you and the other person?")) return;
+  if (!activeConversationId) return;
+  if (activeConversationData?.isGroup) {
+    await leaveActiveGroup();
+    return;
+  }
+  if (!confirm("Delete this conversation for you and the other person?")) return;
   await Promise.all([
     remove(ref(db, `conversations/${activeConversationId}`)),
     remove(ref(db, `messages/${activeConversationId}`))
   ]);
-  unsubscribeFromConversation(activeConversationId);
-  activeConversationId = null;
-  activeOtherUser = null;
-  ui.els.chatView.classList.add("hidden");
-  ui.els.emptyChat.classList.remove("hidden");
-  document.body.classList.remove("chat-open");
+  closeActiveConversation();
   ui.toast("Conversation deleted");
+}
+
+async function createGroup(name, memberUids) {
+  const groupRef = push(ref(db, "conversations"));
+  const participants = { [currentUser.uid]: true };
+  memberUids.forEach(uid => { participants[uid] = true; });
+  const now = Date.now();
+  await set(groupRef, { isGroup: true, name, participants, createdBy: currentUser.uid, createdAt: now, updatedAt: now });
+  return groupRef.key;
+}
+
+async function addMembersToGroup(conversationId, uids) {
+  if (!uids.length) return;
+  const updates = { [`conversations/${conversationId}/updatedAt`]: Date.now() };
+  uids.forEach(uid => { updates[`conversations/${conversationId}/participants/${uid}`] = true; });
+  await update(ref(db), updates);
+}
+
+async function removeMemberFromGroup(conversationId, uid) {
+  await update(ref(db, `conversations/${conversationId}/participants`), { [uid]: null, updatedAt: Date.now() });
+}
+
+async function renameActiveGroup(name) {
+  if (!activeConversationId) return;
+  await update(ref(db, `conversations/${activeConversationId}`), { name, updatedAt: Date.now() });
+}
+
+async function leaveActiveGroup() {
+  if (!activeConversationId || !confirm("Leave this group?")) return;
+  const conversationId = activeConversationId;
+  const snapshot = await get(ref(db, `conversations/${conversationId}/participants`));
+  const participants = snapshot.val() || {};
+  delete participants[currentUser.uid];
+  if (Object.keys(participants).length === 0) {
+    await Promise.all([
+      remove(ref(db, `conversations/${conversationId}`)),
+      remove(ref(db, `messages/${conversationId}`))
+    ]);
+  } else {
+    await update(ref(db, `conversations/${conversationId}/participants`), { [currentUser.uid]: null, updatedAt: Date.now() });
+  }
+  closeActiveConversation();
+  ui.els.manageModal.classList.add("hidden");
+  ui.toast("Left the group");
 }
 
 async function setPresence(user) {
@@ -1502,7 +1914,7 @@ function bindEvents() {
   ui.els.searchInput.addEventListener("input", event => searchUsers(event.target.value));
   ui.els.searchResults.addEventListener("click", event => { const result = event.target.closest("[data-uid]"); if (result) startConversation(userRecord(result.dataset.uid)); });
   ui.els.conversations.addEventListener("click", event => { const button = event.target.closest("[data-conversation-id]"); const item = conversations.find(conversation => conversation.id === button?.dataset.conversationId); if (item) openConversation(item); });
-  ui.els.modalForm.addEventListener("submit", async event => { event.preventDefault(); const name = ui.els.modalInput.value.trim(); if (!name) return; try { await changeDisplayName(currentUser, name); await update(ref(db, `users/${currentUser.uid}`), { displayName: name }); ui.els.currentName.replaceChildren(ui.nameMarkup(name)); if (activeOtherUser) ui.setChatUser(activeOtherUser); ui.els.modal.classList.add("hidden"); ui.toast("Profile updated"); } catch (error) { ui.toast(authError(error), "error"); } });
+  ui.els.modalForm.addEventListener("submit", async event => { event.preventDefault(); const name = ui.els.modalInput.value.trim(); if (!name) return; try { await changeDisplayName(currentUser, name); await update(ref(db, `users/${currentUser.uid}`), { displayName: name }); ui.els.currentName.replaceChildren(ui.nameMarkup(name)); if (activeOtherUser) ui.setChatUser(activeOtherUser, activeConversationData); ui.els.modal.classList.add("hidden"); ui.toast("Profile updated"); } catch (error) { ui.toast(authError(error), "error"); } });
   ui.els.editProfile.addEventListener("click", () => { ui.els.modalInput.value = currentUser?.displayName || ""; ui.els.modal.classList.remove("hidden"); });
   ui.els.closeModal.addEventListener("click", () => ui.els.modal.classList.add("hidden"));
   ui.els.deleteConversation.addEventListener("click", deleteConversation);
@@ -1513,17 +1925,106 @@ function bindEvents() {
   ui.els.emojiPicker.replaceChildren(...emojis.map(emoji => { const button = document.createElement("button"); button.type = "button"; button.textContent = emoji; button.addEventListener("click", () => { ui.els.messageInput.value += emoji; ui.els.messageInput.focus(); }); return button; }));
   ui.els.backButton.addEventListener("click", () => document.body.classList.remove("chat-open"));
   ui.els.menuButton?.addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
+
+  // ── Group creation ──
+  let groupSelectedUids = new Set();
+  function refreshGroupMemberPicker() {
+    const term = ui.els.groupMemberSearch.value.trim().toLowerCase();
+    const filtered = term ? users.filter(user => `${user.displayName} ${user.email}`.toLowerCase().includes(term)) : users;
+    ui.renderMemberPicker(filtered, groupSelectedUids);
+  }
+  ui.els.newGroupButton.addEventListener("click", () => {
+    groupSelectedUids = new Set();
+    ui.els.groupNameInput.value = "";
+    ui.els.groupMemberSearch.value = "";
+    refreshGroupMemberPicker();
+    ui.els.groupModal.classList.remove("hidden");
+    ui.els.groupNameInput.focus();
+  });
+  ui.els.closeGroupModal.addEventListener("click", () => ui.els.groupModal.classList.add("hidden"));
+  ui.els.groupMemberSearch.addEventListener("input", refreshGroupMemberPicker);
+  ui.els.groupMemberList.addEventListener("change", event => {
+    const checkbox = event.target.closest("input[type=checkbox]");
+    if (!checkbox) return;
+    if (checkbox.checked) groupSelectedUids.add(checkbox.dataset.uid);
+    else groupSelectedUids.delete(checkbox.dataset.uid);
+  });
+  ui.els.groupForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const name = ui.els.groupNameInput.value.trim();
+    if (!name || groupSelectedUids.size === 0) {
+      ui.toast("Name your group and pick at least one person", "error");
+      return;
+    }
+    try {
+      const id = await createGroup(name, [...groupSelectedUids]);
+      ui.els.groupModal.classList.add("hidden");
+      await openConversation({ id, user: { isGroup: true, id, displayName: name }, data: { isGroup: true, name, participants: { [currentUser.uid]: true, ...Object.fromEntries([...groupSelectedUids].map(uid => [uid, true])) } } });
+      ui.toast("Group created");
+    } catch (error) {
+      ui.toast(authError(error), "error");
+    }
+  });
+
+  // ── Group management ──
+  ui.els.membersButton.addEventListener("click", () => {
+    if (!activeConversationData?.isGroup) return;
+    ui.els.manageNameInput.value = activeConversationData.name || "";
+    ui.els.manageAddSearch.value = "";
+    ui.renderSearchResults([], ui.els.manageAddResults);
+    const memberUsers = Object.keys(activeConversationData.participants || {}).map(uid => uid === currentUser.uid ? { uid, displayName: currentUser.displayName || "You" } : (userRecord(uid) || { uid, displayName: "Unknown user" }));
+    ui.renderGroupMembersList(memberUsers, async uid => {
+      try {
+        await removeMemberFromGroup(activeConversationId, uid);
+      } catch (error) {
+        ui.toast(authError(error), "error");
+      }
+    });
+    ui.els.manageModal.classList.remove("hidden");
+  });
+  ui.els.closeManageModal.addEventListener("click", () => ui.els.manageModal.classList.add("hidden"));
+  ui.els.renameGroupForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const name = ui.els.manageNameInput.value.trim();
+    if (!name) return;
+    try {
+      await renameActiveGroup(name);
+      ui.toast("Group renamed");
+    } catch (error) {
+      ui.toast(authError(error), "error");
+    }
+  });
+  ui.els.manageAddSearch.addEventListener("input", () => {
+    const term = ui.els.manageAddSearch.value.trim().toLowerCase();
+    const existingUids = new Set(Object.keys(activeConversationData?.participants || {}));
+    const results = term ? users.filter(user => !existingUids.has(user.uid) && `${user.displayName} ${user.email}`.toLowerCase().includes(term)).slice(0, 8) : [];
+    ui.renderSearchResults(results, ui.els.manageAddResults);
+  });
+  ui.els.manageAddResults.addEventListener("click", async event => {
+    const result = event.target.closest("[data-uid]");
+    if (!result || !activeConversationId) return;
+    try {
+      await addMembersToGroup(activeConversationId, [result.dataset.uid]);
+      ui.els.manageAddSearch.value = "";
+      ui.renderSearchResults([], ui.els.manageAddResults);
+      ui.toast("Added to group");
+    } catch (error) {
+      ui.toast(authError(error), "error");
+    }
+  });
+  ui.els.leaveGroupButton.addEventListener("click", leaveActiveGroup);
 }
 
 function beginSession(user) {
   currentUser = user;
+  ui.setCurrentAppUid(user.uid);
   ui.showAuth(false);
   ui.els.currentName.replaceChildren(ui.nameMarkup(user.displayName || "Nexus user"));
   ui.els.currentEmail.textContent = user.email || "";
   ui.avatar(user.displayName, ui.els.currentAvatar);
   setPresence(user).catch(error => ui.toast(authError(error), "error"));
   loadUsers().then(watchConversations).catch(error => ui.toast(authError(error), "error"));
-  initPubNub(user, { onMessage: handleIncomingMessage, onTyping: handleTyping });
+  initPubNub(user, { onMessage: handleIncomingMessage, onTyping: handleTyping, onReaction: handleReaction });
 }
 
 onAuthStateChanged(auth, user => {
