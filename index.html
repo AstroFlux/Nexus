@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#050508">
   <title>Nexus by AstroFlux</title>
+  <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#050508;--s1:#07070f;--s2:#0b0b18;--s3:#10101e;
       --ac:#8a2be2;--ac2:#a855f7;--ac3:#c084fc;--ac4:#e9d5ff;
-      --text:#f2f2fa;--muted:#4a4a6a;--dim:#2a2a42;
+      --text:#f2f2fa;--muted:#6b6b8f;--dim:#2a2a42;
       --success:#34d399;--danger:#ff5f7a;
       --bd:rgba(255,255,255,.055);--bd-ac:rgba(138,43,226,.22);
-      --glow:rgba(138,43,226,.3);--glow2:rgba(138,43,226,.08);
       font-family:'Inter',system-ui,sans-serif;color:var(--text);
     }
     html{height:100%;background:var(--bg)}
@@ -25,7 +25,6 @@
     button{cursor:pointer;color:inherit;border:0;background:none}
 
     #particles{position:fixed;inset:0;z-index:0;pointer-events:none}
-    .screen{min-height:100vh;position:relative;z-index:1}
     .hidden{display:none!important}
 
     .glass-panel{
@@ -36,11 +35,11 @@
     }
 
     /* AUTH */
-    .auth-screen{display:grid;place-items:center;padding:20px;min-height:100vh;overflow-y:auto}
+    .auth-screen{position:fixed;inset:0;z-index:3;display:grid;place-items:center;padding:20px;overflow-y:auto}
     .auth-card{
       width:min(450px,100%);padding:56px 48px 48px;border-radius:32px;
-      position:relative;overflow:hidden;background:rgba(7,7,15,.92);
-      border:1px solid var(--bd-ac;animation:cardEntrance 1s cubic-bezier(.16,1,.3,1) both;
+      position:relative;overflow:hidden;
+      animation:cardEntrance 1s cubic-bezier(.16,1,.3,1) both;
       box-shadow:0 0 0 1px rgba(138,43,226,.04),0 50px 120px rgba(0,0,0,.65),0 0 80px rgba(138,43,226,.04) inset;
     }
     @keyframes cardEntrance{0%{opacity:0;transform:translateY(40px) scale(.93);filter:blur(8px)}100%{opacity:1;transform:none;filter:blur(0)}}
@@ -60,34 +59,37 @@
     input,textarea{
       color:var(--text);background:rgba(255,255,255,.03);border:1px solid var(--bd);outline:0;
       border-radius:13px;padding:15px 17px;font-size:.9rem;font-weight:500;width:100%;
-      transition:border-color .25s,box-shadow .28s,background .25s,transform .15s;
+      transition:border-color .25s,box-shadow .28s,background .25s;
     }
     input:focus,textarea:focus{
       border-color:var(--ac);background:rgba(138,43,226,.04);
       box-shadow:0 0 0 3px rgba(138,43,226,.15),0 0 30px rgba(138,43,226,.07);
-      transform:translateY(-1px);
     }
     .primary-button{
       width:100%;margin-top:28px;border-radius:13px;padding:16px;
       background:linear-gradient(130deg,#5008aa,var(--ac),var(--ac2));
       font-weight:800;font-size:.95rem;letter-spacing:.05em;color:#fff;border:0;cursor:pointer;
       box-shadow:0 5px 35px rgba(138,43,226,.55),0 1px 0 rgba(255,255,255,.12) inset;
-      transition:transform .18s,box-shadow .22s;
+      transition:transform .18s,box-shadow .22s,opacity .2s;
     }
     .primary-button:hover{transform:translateY(-2px);box-shadow:0 12px 45px rgba(138,43,226,.7)}
     .primary-button:active{transform:scale(.97) translateY(0)}
+    .primary-button:disabled{opacity:.6;cursor:wait;transform:none}
     .auth-switch{text-align:center;color:var(--muted);font-size:.8rem;margin-top:24px}
     .auth-switch button{background:none;color:var(--ac3);font-weight:700}
     .form-error{font-size:.76rem;min-height:18px;margin-top:10px;color:var(--danger)}
 
     /* APP */
-    .app-screen{display:grid;grid-template-columns:285px 1fr;padding:12px;gap:12px;height:100vh;max-height:100vh;overflow:hidden}
-    .sidebar{padding:18px 14px;display:flex;flex-direction:column;height:calc(100vh -  ೇ24px);border-radius:26px;overflow:hidden;position:relative}
+    .app-screen{
+      position:fixed;inset:0;z-index:1;display:grid;grid-template-columns:285px minmax(0,1fr);
+      grid-template-rows:minmax(0,1fr);padding:12px;gap:12px;height:100vh;height:100dvh;overflow:hidden;
+    }
+    .sidebar{padding:18px 14px;display:flex;flex-direction:column;height:100%;min-height:0;border-radius:26px;overflow:hidden;position:relative}
     .sidebar-header,.profile-row,.chat-header{display:flex;align-items:center}
     .sidebar-header{justify-content:space-between;padding-bottom:4px}
     .icon-button{color:var(--muted);font-size:1.1rem;padding:8px;border-radius:10px;transition:all .15s}
     .icon-button:hover{background:rgba(138,43,226,.14);color:var(--text);transform:scale(1.08)}
-    .profile-row{gap:11px;margin:16px 0;padding:11px;border-radius:14px;transition:background .18s;cursor:default}
+    .profile-row{gap:11px;margin:16px 0;padding:11px;border-radius:14px;cursor:default}
     .profile-row>div{min-width:0;flex:1}
     .profile-row strong,.profile-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .profile-row small{font-size:.7rem;margin-top:3px;color:var(--muted)}
@@ -101,37 +103,38 @@
     .avatar.tiny{width:32px;height:32px;font-size:.68rem}
     .search-wrap{
       display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);
-      border:1px solid var(--bd);border-radius:13px;padding:0 12px;color:var(--muted);
-      transition:all .25s;
+      border:1px solid var(--bd);border-radius:13px;padding:0 12px;color:var(--muted);transition:all .25s;
     }
     .search-wrap:focus-within{border-color:var(--ac);background:rgba(138,43,226,.04);box-shadow:0 0 0 3px rgba(138,43,226,.12)}
     .search-wrap input{width:100%;background:transparent;border:0;box-shadow:none;padding:12px 0}
     .search-results{margin-top:6px;max-height:190px;overflow-y:auto}
     .search-result,.conversation{
       width:100%;display:flex;gap:10px;align-items:center;text-align:left;
-      background:transparent;border-radius:13px;padding:9px 8px;transition:all .16s;position:relative;
+      background:transparent;border-radius:13px;padding:9px 8px;transition:all .16s;position:relative;border:1px solid transparent;
     }
-    .search-result:hover,.conversation:hover{background:rgba(138,43,226,.1);transform:translateX(4px)}
-    .conversation.active{background:rgba(138,43,226,.16);border:1px solid rgba(138,43,226,.3);box-shadow:0 0 16px rgba(138,43,226,.08)}
+    .search-result:hover,.conversation:hover{background:rgba(138,43,226,.1)}
+    .conversation.active{background:rgba(138,43,226,.16);border-color:rgba(138,43,226,.3);box-shadow:0 0 16px rgba(138,43,226,.08)}
     .search-result strong,.search-result small,.conversation strong,.conversation small{display:block}
     .search-result small,.conversation small{font-size:.68rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
     .search-result>span:last-child,.conversation-copy{min-width:0;flex:1}
+    .conversation strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .section-label{color:var(--muted);font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.18em;margin:18px 8px 8px}
-    .conversations{overflow:auto;flex:1}
+    .conversations{overflow:auto;flex:1;min-height:0}
     .list-empty{font-size:.78rem;color:var(--muted);padding:10px 8px}
     .modal-scroll{max-height:230px;overflow-y:auto;margin:10px 0;padding:0}
-    .pick-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;cursor:pointer}
+    form label.pick-row{display:flex;align-items:center;gap:10px;padding:8px;margin:0;border-radius:12px;cursor:pointer;
+      font-size:.85rem;font-weight:500;letter-spacing:0;text-transform:none;color:var(--text)}
     .pick-row:hover{background:rgba(138,43,226,.08)}
-    .pick-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--ac);flex:none}
+    .pick-row input[type="checkbox"]{width:16px;height:16px;padding:0;accent-color:var(--ac);flex:none}
     .pick-row>div{flex:1;min-width:0}
     .pick-row small{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}
     .member-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px}
     .member-row:hover{background:rgba(138,43,226,.07)}
     .member-row>div{flex:1;min-width:0}
-    .member-row small{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}
     .member-remove{color:var(--muted);font-size:.85rem;padding:5px 9px;border-radius:9px;transition:all .15s;flex:none}
     .member-remove:hover{background:rgba(255,95,122,.15);color:var(--danger)}
     .group-name-row{display:flex;gap:8px;margin-top:6px}
+    .group-name-row input{flex:1;min-width:0}
     .group-name-row button{
       padding:0 18px;border-radius:13px;flex:none;background:rgba(138,43,226,.18);
       border:1px solid var(--bd-ac);color:var(--ac3);font-weight:700;font-size:.8rem;cursor:pointer;
@@ -146,82 +149,80 @@
       background:rgba(138,43,226,.2);border:1px solid rgba(138,43,226,.45);
       padding:2px 6px;border-radius:5px;margin-left:5px;text-transform:uppercase;vertical-align:middle;
     }
+    .uid-note{margin-top:18px;font-size:.68rem;color:var(--muted);word-break:break-all;user-select:all}
 
     .chat-area{
-      min-width:0;position:relative;background:rgba(5,5,10,.8);
-      border:1px solid var(--bd-ac);border-radius:26px;overflow:hidden;
-      height:calc(100vh -  ೇ24px);display:flex;flex-direction:column;
+      min-width:0;min-height:0;position:relative;background:rgba(5,5,10,.8);
+      border:1px solid var(--bd-ac);border-radius:26px;overflow:hidden;height:100%;display:flex;flex-direction:column;
     }
     .empty-chat{flex:1;display:grid;place-items:center;align-content:center;gap:10px;text-align:center;color:var(--muted)}
     .empty-chat .brand{font-size:4rem;margin-bottom:20px}
     .empty-chat h2{color:var(--text);font-size:1.6rem;font-weight:900;letter-spacing:-.5px;margin:0}
     .empty-chat p{margin:0;font-size:.85rem}
-    .chat-view{height:100%;display:grid;grid-template-rows:auto 1fr auto auto;position:relative;z-index:1}
+    .chat-view{flex:1;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;position:relative;z-index:1}
     .chat-header{gap:12px;padding:16px 22px;border-bottom:1px solid var(--bd);background:rgba(5,5,10,.85);flex-shrink:0;position:relative}
     .chat-heading{flex:1;min-width:0}
-    .chat-heading h2{font-size:.95rem;font-weight:700;margin:0 0 4px}
+    .chat-heading h2{font-size:.95rem;font-weight:700;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .status{color:var(--muted);font-size:.68rem;display:flex;align-items:center;gap:5px}
     .status i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted)}
     .status.online{color:var(--success)}
     .status.online i{background:var(--success)}
     .danger-button:hover{color:var(--danger)!important}
 
-    .messages{padding:22px clamp(12px,4vw,52px);overflow-y:auto;display:flex;flex-direction:column;gap:3px;flex:1}
-    .date-separator{display:flex;align-items:center;justify-content:center;margin:18px 0 10px;position:relative}
-    .date-separator span{background:var(--bg);padding:0 14px;position:relative;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-    .message-row{display:flex;margin:2px 0;animation:msgSlide .4s ease both}
+    .messages{padding:22px clamp(12px,4vw,52px);overflow-y:auto;display:flex;flex-direction:column;gap:3px;min-height:0}
+    .date-separator{display:flex;align-items:center;justify-content:center;margin:18px 0 10px}
+    .date-separator span{padding:5px 14px;border-radius:999px;background:rgba(255,255,255,.04);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    .message-row{display:flex;align-items:flex-start;gap:6px;margin:2px 0;position:relative;animation:msgSlide .35s ease both}
+    @keyframes msgSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
     .message-row.own{justify-content:flex-end}
     .message-bubble{
-      position:relative;max-width:min(580px,72%);padding:11px 16px 9px;
+      position:relative;max-width:min(580px,100%);padding:11px 16px 9px;
       border-radius:20px 20px 20px 4px;background:var(--s2);border:1px solid var(--bd);
-      box-shadow:0 2px 16px rgba(0,0,0,.35);width:fit-content;
+      box-shadow:0 2px 16px rgba(0,0,0,.35);width:fit-content;min-width:0;
     }
+    .message-row .message-bubble{max-width:min(580px,78%)}
     .own .message-bubble{
       border-radius:20px 20px 4px 20px;background:linear-gradient(148deg,#4e0e9e,var(--ac),#9030f0);
       border-color:rgba(192,132,252,.15);color:#fff;
     }
     .message-bubble p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;line-height:1.54;font-size:.87rem}
-    .message-bubble footer{color:rgba(255,255,255,.38);font-size:.59rem;margin-top:5px;display:flex;align-items:center;gap:4px}
-    .message-delete{
-      position:absolute;right:-28px;top:5px;background:rgba(255,95,122,.1);
-      border:1px solid rgba(255,95,122,.25);color:var(--danger);font-size:.7rem;width:22px;height:22px;
-      border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;padding:0;transition:all .15s;
+    .message-bubble footer{color:rgba(255,255,255,.4);font-size:.59rem;margin-top:5px;display:flex;align-items:center;gap:4px}
+    .msg-actions{display:flex;gap:4px;align-self:center;opacity:0;transition:opacity .15s;flex:none}
+    .message-row:hover .msg-actions,.message-row:focus-within .msg-actions{opacity:1}
+    @media(hover:none){.msg-actions{opacity:.75}}
+    .msg-actions button{
+      width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:.75rem;padding:0;transition:all .15s;
     }
-    .message-bubble:hover .message-delete{opacity:1}
-    .react-button{
-      position:absolute;top:5px;background:rgba(138,43,226,.12);border:1px solid rgba(138,43,226,.3);
-      color:var(--ac3);font-size:.72rem;width:22px;height:22px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;opacity:0;padding:0;transition:all .15s;
-    }
-    .own .react-button{right:-28px}
-    .other .react-button{left:-28px}
-    .message-bubble:hover .react-button{opacity:1}
-    .own .message-delete{right:-56px}
+    .react-button{background:rgba(138,43,226,.12);border:1px solid rgba(138,43,226,.3)!important;color:var(--ac3)}
+    .message-delete{background:rgba(255,95,122,.1);border:1px solid rgba(255,95,122,.25)!important;color:var(--danger)}
     .reaction-popover{
-      position:absolute;top:-46px;z-index:5;background:var(--s3);border:1px solid var(--bd-ac);
+      position:absolute;top:100%;margin-top:4px;z-index:5;background:var(--s3);border:1px solid var(--bd-ac);
       border-radius:16px;padding:6px;display:flex;gap:2px;box-shadow:0 12px 40px rgba(0,0,0,.6);
     }
     .own .reaction-popover{right:0}
     .other .reaction-popover{left:0}
-    .reaction-popover button{background:none;padding:6px 7px;border-radius:9px;font-size:1.05rem;cursor:pointer}
-    .reaction-popover button:hover{background:rgba(138,43,226,.2);transform:scale(1.25) translateY(-2px)}
+    .reaction-popover button{background:none;padding:6px 7px;border-radius:9px;font-size:1.05rem;cursor:pointer;transition:transform .12s}
+    .reaction-popover button:hover{background:rgba(138,43,226,.2);transform:scale(1.25)}
     .msg-reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+    .msg-reactions:empty{display:none}
     .own .msg-reactions{justify-content:flex-end}
     .reaction-pill{
-      display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);
+      display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);
       border:1px solid var(--bd);border-radius:999px;padding:2px 8px 2px 6px;font-size:.72rem;
-      color:var(--muted);cursor:pointer;transition:all .15s;
+      color:var(--text);cursor:pointer;transition:all .15s;
     }
-    .reaction-pill.mine{background:rgba(138,43,226,.22);border-color:rgba(138,43,226,.5);color:var(--ac4)}
+    .reaction-pill.mine{background:rgba(138,43,226,.3);border-color:rgba(192,132,252,.6);color:var(--ac4)}
 
     .typing{min-height:24px;padding:0 22px 4px;color:var(--muted);font-size:.7rem;font-style:italic}
     .composer{display:flex;gap:10px;padding:12px 14px 16px;flex-shrink:0;position:relative;z-index:1}
     .composer-input{
-      display:flex;align-items:flex-end;gap:6px;position:relative;flex:1;background:var(--s2);
+      display:flex;align-items:flex-end;gap:6px;position:relative;flex:1;min-width:0;background:var(--s2);
       border:1px solid var(--bd);border-radius:18px;padding:7px 9px;
     }
     .composer-input:focus-within{border-color:rgba(138,43,226,.5);box-shadow:0 0 0 3px rgba(138,43,226,.1)}
-    .composer textarea{border:0;background:none;resize:none;padding:8px;max-height:140px;flex:1;line-height:1.52;font-size:.88rem}
+    .composer textarea{border:0;background:none;resize:none;padding:8px;max-height:140px;flex:1;line-height:1.52;font-size:.88rem;box-shadow:none}
+    .composer textarea:focus{box-shadow:none;background:none}
     .composer-input>button{color:var(--muted);font-size:1.3rem;padding:7px;border-radius:10px;background:none;cursor:pointer}
     .composer-input>button:hover{color:var(--ac2);background:rgba(138,43,226,.12)}
     .send-button{
@@ -231,11 +232,12 @@
     }
     .send-button:hover{transform:scale(1.08) translateY(-3px)}
     .emoji-picker{
-      position:absolute;bottom:64px;left:0;background:var(--s3);border:1px solid var(--bd-ac);
+      position:absolute;bottom:64px;left:0;background:var(--s3);border:1px solid var(--bd-ac);z-index:6;
       padding:12px;border-radius:18px;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;
       box-shadow:0 20px 60px rgba(0,0,0,.7);
     }
     .emoji-picker button{background:none;padding:9px;border-radius:10px;font-size:1.15rem;cursor:pointer}
+    .emoji-picker button:hover{background:rgba(138,43,226,.2)}
 
     .toast{
       position:fixed;right:20px;bottom:20px;padding:13px 20px;border:1px solid var(--bd-ac);
@@ -250,30 +252,29 @@
       position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(14px);
       display:grid;place-items:center;padding:20px;z-index:200;
     }
-    .modal-card{
-      width:min(400px,100%);padding:36px;border-radius:28px;position:relative;
-      background:rgba(7,7,15,.95);border:1px solid var(--bd-ac;
-    }
+    .modal-card{width:min(400px,100%);max-height:100%;overflow-y:auto;padding:36px;border-radius:28px;position:relative}
     .modal-card h2{margin-top:0;font-size:1.15rem;font-weight:900;letter-spacing:-.3px}
     .modal-close{position:absolute;top:14px;right:16px;color:var(--muted);font-size:1.4rem;padding:5px 10px;border-radius:10px;background:none;cursor:pointer}
     .modal-close:hover{background:rgba(255,255,255,.06);color:var(--text)}
 
-    .mobile-only{display:none}
+    .mobile-only{display:none!important}
 
     @media(max-width:760px){
-      .app-screen{display:block;padding:0;height:100vh;overflow:hidden}
-      .sidebar,.chat-area{border-radius:0;height:100vh}
-      .sidebar{position:fixed;z-index:10;inset:0 auto 0 0;width:min(320px,90vw);transform:translateX(-115%);transition:transform .35s}
-      .sidebar-open .sidebar{transform:none;box-shadow:20px 0 60px rgba(0,0,0,.7)}
-      .chat-area{position:fixed;inset:0;border:none;border-radius:0}
-      .mobile-only{display:flex!important}
-      .message-bubble{max-width:88%}
-      .message-delete,.react-button{opacity:1}
+      .app-screen{display:block;padding:0}
+      .sidebar,.chat-area{position:fixed;inset:0;width:100%;height:100%;border-radius:0;border:0}
+      .sidebar{z-index:10}
+      .chat-area{z-index:11;transform:translateX(100%);visibility:hidden;transition:transform .3s,visibility .3s}
+      body.chat-open .chat-area{transform:none;visibility:visible}
+      .mobile-only{display:inline-block!important}
+      .message-row .message-bubble{max-width:82%}
       .toast{right:12px;bottom:12px;left:12px;text-align:center}
-      .chat-open .empty-chat{display:none!important}
-      .sidebar-open .chat-area{filter:blur(3px) brightness(.6);pointer-events:none;transition:filter .35s}
       .auth-card{padding:40px 28px 36px;border-radius:28px}
       .brand{font-size:2.2rem}
+      .brand.compact{font-size:1.5rem}
+      input,textarea{font-size:16px}
+      .composer{padding:12px 12px calc(14px + env(safe-area-inset-bottom))}
+      .chat-header{padding:12px 14px}
+      .emoji-picker{grid-template-columns:repeat(6,1fr);max-width:calc(100vw - 40px)}
     }
 
     /* LANDING */
@@ -323,6 +324,7 @@
       .features{padding:70px 20px}.feat-grid{grid-template-columns:1fr}
       .land-footer{padding:24px 20px;flex-direction:column;gap:8px;text-align:center}
     }
+    @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
   <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.8.2.0.min.js"></script>
 </head>
@@ -348,7 +350,7 @@
         <button class="hero-ghost" id="land-learnmore">See how it works ↓</button>
       </div>
       <div class="hero-pills">
-        <div class="hero-pill"><span class="pill-dot green"></span>End-to-end encrypted</div>
+        <div class="hero-pill"><span class="pill-dot green"></span>Secure sign-in</div>
         <div class="hero-pill"><span class="pill-dot purple"></span>Real-time delivery</div>
         <div class="hero-pill"><span class="pill-dot blue"></span>Zero ads, ever</div>
       </div>
@@ -358,7 +360,7 @@
       <div class="feat-label">Why Nexus</div>
       <h2 class="feat-title">Built different.</h2>
       <div class="feat-grid">
-        <div class="feat-card"><div class="feat-icon">⚡</div><h3>Instant delivery</h3><p>Messages arrive in milliseconds. Powered by PubNub's global real-time network.</p></div>
+        <div class="feat-card"><div class="feat-icon">⚡</div><h3>Instant delivery</h3><p>Messages, reactions and typing indicators arrive in real time.</p></div>
         <div class="feat-card"><div class="feat-icon">🔒</div><h3>Secure by default</h3><p>Your account is protected by Firebase Authentication.</p></div>
         <div class="feat-card"><div class="feat-icon">✦</div><h3>Premium experience</h3><p>Every interaction is crafted to feel alive.</p></div>
         <div class="feat-card"><div class="feat-icon">🌐</div><h3>Works everywhere</h3><p>Desktop, tablet, mobile — no app download required.</p></div>
@@ -378,17 +380,17 @@
   </div>
 
   <!-- AUTH -->
-  <main id="auth-screen" class="screen auth-screen hidden">
+  <main id="auth-screen" class="auth-screen hidden">
     <section class="auth-card glass-panel">
       <div class="brand"><span>Ne</span><i>/</i><span>xus</span></div>
       <p class="eyebrow">by AstroFlux</p>
       <h1 id="auth-title">Welcome back</h1>
       <p class="muted">Your conversations, in real time.</p>
       <form id="auth-form">
-        <label id="name-field" class="hidden">Display name<input id="display-name" autocomplete="name"></label>
+        <label id="name-field" class="hidden">Display name<input id="display-name" autocomplete="name" maxlength="40"></label>
         <label>Email<input id="email" type="email" autocomplete="email" required></label>
         <label>Password<input id="password" type="password" autocomplete="current-password" minlength="6" required></label>
-        <p id="auth-error" class="form-error"></p>
+        <p id="auth-error" class="form-error" role="alert"></p>
         <button id="auth-submit" class="primary-button" type="submit">Sign in</button>
       </form>
       <div id="auth-switch" class="auth-switch">New to Nexus? <button type="button">Create an account</button></div>
@@ -396,7 +398,7 @@
   </main>
 
   <!-- APP -->
-  <main id="app-screen" class="screen app-screen hidden">
+  <main id="app-screen" class="app-screen hidden">
     <aside id="sidebar" class="sidebar glass-panel">
       <header class="sidebar-header">
         <div class="brand compact"><span>Ne</span><i>/</i><span>xus</span></div>
@@ -450,6 +452,7 @@
       <h2>Edit profile</h2>
       <label>Display name<input id="profile-name" required maxlength="40"></label>
       <button class="primary-button" type="submit">Save changes</button>
+      <p class="uid-note">Your user ID: <span id="profile-uid"></span></p>
     </form>
   </div>
 
@@ -483,7 +486,7 @@
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -504,6 +507,9 @@
       update,
       remove,
       onValue,
+      onChildAdded,
+      onChildChanged,
+      onChildRemoved,
       onDisconnect
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -521,119 +527,23 @@
       databaseURL: "https://nexus-c1e64-default-rtdb.firebaseio.com"
     };
 
-    const app = initializeApp(FIREBASE_CONFIG);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    // Put your own Firebase user ID(s) here (shown in Edit profile) to lock the DEV badge to you.
+    // While this list is empty, the badge is shown for anyone whose display name is exactly "ASTRO".
+    const DEV_UIDS = [];
 
-    // ── Auth ──
-    async function register(email, password, displayName) {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(result.user, { displayName });
-      return result.user;
+    let app = null, auth = null, db = null;
+    try {
+      app = initializeApp(FIREBASE_CONFIG);
+      auth = getAuth(app);
+      db = getDatabase(app);
+    } catch (err) {
+      console.error("Firebase failed to start", err);
     }
 
-    function login(email, password) {
-      return signInWithEmailAndPassword(auth, email, password).then(result => result.user);
-    }
-
-    function logout() {
-      return signOut(auth);
-    }
-
-    async function changeDisplayName(user, displayName) {
-      await updateProfile(user, { displayName });
-      return user;
-    }
-
-    function authError(error) {
-      const messages = {
-        "auth/invalid-credential": "Email or password is incorrect.",
-        "auth/email-already-in-use": "That email is already registered.",
-        "auth/invalid-email": "Enter a valid email address.",
-        "auth/weak-password": "Password must be at least 6 characters.",
-        "auth/too-many-requests": "Too many attempts. Try again shortly."
-      };
-      return messages[error.code] || error.message || "Something went wrong.";
-    }
-
-    // ── PubNub ──
-    let currentUser = null;
-    let pn = null;
-    let listenerAdded = false;
-    let activeConversationId = null;
-    let activeOtherUser = null;
-    let activeConversationData = null;
-    let onMessageArrived = null;
-    let onTypingArrived = null;
-    let onReactionArrived = null;
-
-    function initPubNub(user, handlers) {
-      currentUser = user;
-      onMessageArrived = handlers.onMessage;
-
-  onTypingArrived = handlers.onTyping;
- 
-  onReactionArrived = handlers.onReaction;
-
-
-
-
-  if (!pn) {
-        pn = new PubNub({
-          publishKey: PUBNUB_PUBLISH_KEY,
-          subscribeKey: PUBNUB_SUBSCRIBE_KEY,
-          uuid: user.uid,
-          heartbeatInterval: 30
-        });
-      }
-
-      if (!listenerAdded) {
-        pn.addListener({
-          message: (ev => {
-            const msg = ev.message;
-            if (!msg || msg.uid === currentUser.uid) return;
-            if (onMessageArrived) onMessageArrived(msg;
-          }),
-          signal: (ev => {
-            const sig = ev.message;
-            if (!sig || sig.fromUid === currentUser.uid || sig.uid === currentUser.uid) return;
-            if (sig.type === "typing" && onTypingArrived) onTypingArrived(sig;
-            else if (sig.type === "reaction" && onReactionArrived) onReactionArrived(sig;
-          })
-        });
-        listenerAdded = true;
-      }
-    }
-
-    function subscribeToConversation(conversationId) {
-      activeConversationId = conversationId;
-      if (pn) pn.subscribe({ channels: [conversationId] });
-    }
-
-    function unsubscribeFromConversation(conversationId) {
-      if (!pn || !conversationId) return;
-      pn.unsubscribe({ channels: [conversationId] });
-      if (activeConversationId === conversationId) activeConversationId = null;
-    }
-
-    function publishMessage(conversationId, messageObj) {
- {
-  if (pn) pn.publish({ channel: conversationId, message: messageObj });
-    }
-
-    function sendTypingSignal(conversationId, fromUid, isTyping) {
- {
-  if (pn) pn.signal({ channel: conversationId, message: { type: "typing", fromUid, isTyping } });
-    }
-
-    function sendReactionSignal(conversationId, messageKey, uid, emoji) {
- {
-  if (pn) pn.signal({ channel: conversationId, message: { type: "reaction", conversationId, messageKey, uid, emoji } });
-    }
-
-    // ── UI helpers ──
+    // ── Helpers ──
     const $ = selector => document.querySelector(selector);
     const els = {
+      landing: $("#landing"),
       authScreen: $("#auth-screen"),
       appScreen: $("#app-screen"),
       authForm: $("#auth-form"),
@@ -659,11 +569,9 @@
       messages: $("#messages"),
       composer: $("#composer"),
       messageInput: $("#message-input"),
-      sendButton: $("#send-button"),
       emojiButton: $("#emoji-button"),
       emojiPicker: $("#emoji-picker"),
       typing: $("#typing"),
-      menuButton: $("#menu-button"),
       backButton: $("#back-button"),
       deleteConversation: $("#delete-conversation"),
       logoutButton: $("#logout-button"),
@@ -672,6 +580,7 @@
       modal: $("#profile-modal"),
       modalForm: $("#profile-form"),
       modalInput: $("#profile-name"),
+      profileUid: $("#profile-uid"),
       closeModal: $("#close-modal"),
       newGroupButton: $("#new-group-button"),
       groupModal: $("#group-modal"),
@@ -692,34 +601,48 @@
     };
 
     const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
-    const emojis = ["😀", "😂", "😍", "🥳", "😎", "🤔", "😭", "😅", "🙌", "👏", "❤️", "🔥", "✨", "🎉", "👍", "👀", "💜", "✅"];
+    const EMOJIS = ["😀", "😂", "😍", "🥳", "😎", "🤔", "😭", "😅", "🙌", "👏", "❤️", "🔥", "✨", "🎉", "👍", "👀", "💜", "✅"];
 
-    function showAuth(show) {
-      els.authScreen.classList.toggle("hidden", !show);
-      els.appScreen.classList.toggle("hidden", show;
+    let toastTimer;
+    function toast(message, kind = "success") {
+      clearTimeout(toastTimer);
+      els.toast.textContent = message;
+      els.toast.className = `toast visible ${kind}`;
+      toastTimer = setTimeout(() => { els.toast.className = "toast"; }, 3200);
     }
 
-    function setAuthMode(signUp) {
-      els.authTitle.textContent = signUp ? "Create your account" : "Welcome back";
-      els.authSubmit.textContent = signUp ? "Create account" : "Sign in";
-      els.nameField.classList.toggle("hidden", !signUp);
-      els.authSwitch.innerHTML = signUp ? 'Already a member? <button type="button">Sign in</button>' : 'New to Nexus? <button type="button">Create an account</button>';
-      els.authError.textContent = "";
+    function errorText(error) {
+      const messages = {
+        "auth/invalid-credential": "Email or password is incorrect.",
+        "auth/wrong-password": "Email or password is incorrect.",
+        "auth/user-not-found": "Email or password is incorrect.",
+        "auth/email-already-in-use": "That email is already registered.",
+        "auth/invalid-email": "Enter a valid email address.",
+        "auth/weak-password": "Password must be at least 6 characters.",
+        "auth/too-many-requests": "Too many attempts. Try again shortly.",
+        "auth/network-request-failed": "Network error. Check your connection.",
+        "auth/operation-not-allowed": "Email/password sign-in is not enabled in Firebase."
+      };
+      if (error && messages[error.code]) return messages[error.code];
+      if (/permission[_ ]denied/i.test(String(error && error.message))) return "Permission denied by the database rules.";
+      return (error && error.message) || "Something went wrong.";
     }
 
-    function avatar(name, element) {
-      element.textContent = (name || "?").trim().charAt(0).toUpperCase();
-      element.setAttribute("aria-label", name || "User");
+    function fail(error) {
+      console.error(error);
+      toast(errorText(error), "error");
     }
 
-    function isDev(name) {
-      return String(name || "").trim() === "ASTRO";
+    function isDev(u) {
+      if (!u || u.isGroup) return false;
+      if (DEV_UIDS.length) return DEV_UIDS.includes(u.uid);
+      return String(u.displayName || "").trim() === "ASTRO";
     }
 
-    function nameMarkup(name) {
+    function nameMarkup(u) {
       const span = document.createElement("span");
-      span.textContent = name || "Unknown user";
-      if (isDev(name)) {
+      span.textContent = (u && u.displayName) || "Unknown user";
+      if (isDev(u)) {
         const badge = document.createElement("b");
         badge.className = "dev-badge";
         badge.textContent = "DEV";
@@ -728,305 +651,244 @@
       return span;
     }
 
-    function renderConversations(items, activeId) {
- {
-  els.conversations.replaceChildren();
-      if (!items.length) {
-        const p = document.createElement("p");
-        p.className = "list-empty";
-        p.textContent = "No conversations yet";
-        els.conversations.append(p;
-        return;
-      }
-      items.forEach(item => {
-        const button = document.createElement("button");
-        button.className = `conversation ${item.id === activeId ? "active" : ""}`;
-        button.dataset.conversationId = item.id;
-        const av = document.createElement("span");
-        av.className = "avatar small";
-        avatar(item.user.displayName, av;
-        const copy = document.createElement("span");
-        copy.className = "conversation-copy";
-        const title = document.createElement("strong");
-        title.append(nameMarkup(item.user.displayName);
-        const preview = document.createElement("small");
-        preview.textContent = item.data?.lastMessage?.text || "Start a conversation";
-        copy.append(title, preview);
-        button.append(av, copy;
-        els.conversations.append(button;
-      });
+    function setAvatar(name, element) {
+      element.textContent = (String(name || "?").trim().charAt(0) || "?").toUpperCase();
+      element.setAttribute("aria-label", name || "User");
     }
 
-    function renderSearchResults(users, container = els.searchResults) {
- {
-  container.replaceChildren();
-      users.forEach(user => {
-        const button = document.createElement("button");
-        button.className = "search-result";
-        button.dataset.uid = user.uid;
-        const av = document.createElement("span");
-        av.className = "avatar tiny";
-        avatar(user.displayName, av;
-        const copy = document.createElement("span");
-        const name = document.createElement("strong");
-        name.append(nameMarkup(user.displayName);
-        const email = document.createElement("small");
-        email.textContent = user.email || "";
-        copy.append(name, email;
-        button.append(av, copy;
-        container.append(button;
-      });
+    function showScreen(which) {
+      els.landing.classList.toggle("hidden", which !== "landing");
+      els.authScreen.classList.toggle("hidden", which !== "auth");
+      els.appScreen.classList.toggle("hidden", which !== "app");
     }
 
-    function renderMemberPicker(users, selectedUids) {
- {
-  els.groupMemberList.replaceChildren();
-      if (!users.length) {
-        const p = document.createElement("p");
-        p.className = "list-empty";
-        p.textContent = "No one found";
-        els.groupMemberList.append(p;
-        return;
-      }
-      users.forEach(user => {
-        const label = document.createElement("label");
-        label.className = "pick-row";
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.dataset.uid = user.uid;
-        cb.checked = selectedUids.has(user.uid;
-        const copy = document.createElement("div");
-        const name = document.createElement("strong");
-        name.append(nameMarkup(user.displayName);
-        const email = document.createElement("small");
-        email.textContent = user.email || "";
-        copy.append(name, email;
-        label.append(cb, copy;
-        els.groupMemberList.append(label;
-      });
+    // ── Auth mode ──
+    let signUpMode = false;
+    function setAuthMode(signUp) {
+      signUpMode = signUp;
+      els.authTitle.textContent = signUp ? "Create your account" : "Welcome back";
+      els.authSubmit.textContent = signUp ? "Create account" : "Sign in";
+      els.nameField.classList.toggle("hidden", !signUp);
+      els.passwordInput.autocomplete = signUp ? "new-password" : "current-password";
+      els.authSwitch.innerHTML = signUp
+        ? 'Already a member? <button type="button">Sign in</button>'
+        : 'New to Nexus? <button type="button">Create an account</button>';
+      els.authError.textContent = "";
     }
 
-    function renderGroupMembersList(memberUsers, onRemove) {
- {
-  els.manageMembersList.replaceChildren();
-      memberUsers.forEach(user => {
-        const row = document.createElement("div");
-        row.className = "member-row";
-        const av = document.createElement("span");
-        av.className = "avatar tiny";
-        avatar(user.displayName, av;
-        const copy = document.createElement("div");
-        const name = document.createElement("strong");
-        name.append(nameMarkup(user.displayName);
-        copy.append(name;
-        row.append(av, copy;
-        if (user.uid !== currentUser.uid && onRemove) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "member-remove";
-          btn.title = "Remove from group";
-          btn.textContent = "×";
-          btn.addEventListener("click", () => onRemove(user.uid);
-          row.append(btn;
-        }
-        els.manageMembersList.append(row;
-      });
-    }
-
-    function setChatUser(peer, conversationData) {
- {
-  els.chatName.replaceChildren(nameMarkup(peer.displayName);
-      avatar(peer.displayName, els.chatAvatar;
-      const isGroup = !!conversationData?.isGroup;
-      els.membersButton.classList.toggle("hidden", !isGroup;
-      if (isGroup) {
-        const count = Object.keys(conversationData.participants || {}).length;
-        els.chatStatus.className = "status";
-        els.chatStatus.innerHTML = `<i></i>${count} member${count === 1 ? "" : "s"}`;
-      }
-    }
-
-    function addDateSeparator(label) {
- {
-  const sep = document.createElement("div");
-      sep.className = "date-separator";
-      const span = document.createElement("span");
-      span.textContent = label;
-      sep.append(span;
-      els.messages.append(sep;
-    }
-
-    function scrollMessages() {
- {
-  els.messages.scrollTop = els.messages.scrollHeight;
-    }
-
-    function toast(message, kind = "success") {
- {
-  clearTimeout(toastTimer;
-      els.toast.textContent = message;
-      els.toast.className = `toast visible ${kind}`;
-      toastTimer = setTimeout(() => els.toast.className = "toast", 3200;
-    }
-
-    let toastTimer;
-    let currentAppUid = null;
-    function setCurrentAppUid(uid) { currentAppUid = uid; }
-
-    function buildReactionPopover(row, messageKey, onReact) {
- {
-  const existing = row.querySelector(".reaction-popover");
-      if (existing) { existing.remove(); return; }
-      const popover = document.createElement("div");
-      popover.className = "reaction-popover";
-      REACTION_EMOJIS.forEach(emoji => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = emoji;
-        btn.addEventListener("click", () => {
-          onReact(messageKey, emoji;
-          popover.remove();
-        });
-        popover.append(btn;
-      });
-      row.querySelector(".message-bubble").append(popover;
-      const close = ev => {
-        if (!popover.contains(ev.target)) {
-          popover.remove();
-          document.removeEventListener("click", close, true;
-        }
-      };
-      setTimeout(() => document.addEventListener("click", close, true), 0;
-    }
-
-    function renderReactions(bubble, reactions, currentUid, messageKey, onReact) {
- {
-  let container = bubble.querySelector(".msg-reactions");
-      if (!container) {
-        container = document.createElement("div");
-        container.className = "msg-reactions";
-        bubble.append(container;
-      }
-      container.replaceChildren();
-      const grouped = {};
-      Object.entries(reactions || {}).forEach(([uid, emoji]) => {
-        if (!emoji) return;
-        (grouped[emoji] = grouped[emoji] || []).push(uid;
-      });
-      Object.entries(grouped).forEach(([emoji, uids]) => {
-        const pill = document.createElement("button");
-        pill.type = "button";
-        pill.className = `reaction-pill ${uids.includes(currentUid) ? "mine" : ""}`;
-        const glyph = document.createElement("span");
-        glyph.textContent = emoji;
-        const count = document.createElement("span");
-        count.className = "count";
-        count.textContent = uids.length;
-        pill.append(glyph, count;
-        pill.addEventListener("click", () => onReact(messageKey, emoji);
-        container.append(pill;
-      });
-    }
-
-    function addMessage(message, own, handlers) {
- {
-  const { onDelete, onReact, reactions, senderName } = handlers;
-      const row = document.createElement("article");
-      row.className = `message-row ${own ? "own" : "other"}`;
-      row.dataset.messageKey = message.key;
-      const bubble = document.createElement("div");
-      bubble.className = "message-bubble";
-      if (senderName) {
-        const label = document.createElement("span");
-        label.className = "sender-name";
-        label.append(nameMarkup(senderName);
-        bubble.append(label;
-      }
-      const text = document.createElement("p");
-      text.textContent = message.text;
-      const meta = document.createElement("footer");
-      const time = document.createElement("span");
-      time.textContent = new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-      meta.append(time;
-      bubble.append(text, meta;
-
-      const reactBtn = document.createElement("button");
-      reactBtn.className = "react-button";
-      reactBtn.type = "button";
-      reactBtn.title = "React";
-      reactBtn.textContent = "☺";
-      reactBtn.addEventListener("click", () => buildReactionPopover(row, message.key, onReact);
-      bubble.append(reactBtn;
-
-      if (own) {
-        const delBtn = document.createElement("button");
-        delBtn.className = "message-delete";
-        delBtn.type = "button";
-        delBtn.title = "Delete message";
-        delBtn.textContent = "×";
-        delBtn.addEventListener("click", () => onDelete(message.key, row);
-        bubble.append(delBtn;
-      }
-      row.append(bubble;
-      els.messages.append(row;
-      renderReactions(bubble, reactions, currentUser?.uid, message.key, onReact;
-    }
-
-    function updateMessageReactions(messageKey, reactions, onReact) {
- {
-  const row = els.messages.querySelector(`[data-message-key="${CSS.escape(messageKey)}"]`);
-      if (!row) return;
-      renderReactions(row.querySelector(".message-bubble"), reactions, currentUser?.uid, messageKey, onReact;
-    }
-
-    const ui = {
-      els,
-      showAuth,
-      setAuthMode,
-      avatar,
-      isDev,
-      nameMarkup,
-      renderConversations,
-      renderSearchResults,
-      renderMemberPicker,
-      renderGroupMembersList,
-      setChatUser,
-      addDateSeparator,
-      addMessage,
-      scrollMessages,
-      toast,
-      setCurrentAppUid,
-      updateMessageReactions
-    };
-
-    // ── App state and logic ──
-    let conversations = [];
+    // ── State ──
+    let currentUser = null;
+    let sessionUid = null;
+    let registering = false;
     let users = [];
-    let conversationStop = null;
-    let presenceStop = null;
-    let typingTimer;
+    let conversationsRaw = null;
+    let conversations = [];
+    let activeConversationId = null;
+    let activeOtherUser = null;
+    let activeConversationData = null;
+    let activeMessages = {};
     let lastDateShown = "";
-    let activeReactions = {};
+    let usersStop = null;
+    let conversationsStop = null;
+    let connectedStop = null;
+    let messagesStop = null;
+    let remoteTypingTimer;
+    let localTypingTimer;
+    let lastTypingSent = 0;
+    let groupSelectedUids = new Set();
+    let pn = null;
 
     const conversationIdFor = (a, b) => [a, b].sort().join("_");
     const userRecord = uid => users.find(u => u.uid === uid);
 
     function resolveDisplayName(uid) {
- {
-  if (currentUser && uid === currentUser.uid) return currentUser.displayName || "You";
-      return userRecord(uid)?.displayName || "Someone";
+      if (currentUser && uid === currentUser.uid) return currentUser.displayName || "You";
+      return (userRecord(uid) && userRecord(uid).displayName) || "Someone";
     }
 
     function conversationPeer(id, value) {
- {
-  if (value.isGroup) return { isGroup: true, id, displayName: value.name || "Unnamed group" };
-      const otherUid = Object.keys(value.participants || {}).find(uid => uid !== currentUser.uid;
+      if (value.isGroup) return { isGroup: true, id, displayName: value.name || "Unnamed group" };
+      const otherUid = Object.keys(value.participants || {}).find(uid => uid !== currentUser.uid);
       return userRecord(otherUid) || { uid: otherUid, displayName: "Unknown user", email: "" };
     }
 
+    // ── PubNub (typing indicators) ──
+    function initPubNub(user) {
+      if (typeof PubNub === "undefined") { console.warn("PubNub failed to load; typing indicators disabled."); return; }
+      try {
+        pn = new PubNub({ publishKey: PUBNUB_PUBLISH_KEY, subscribeKey: PUBNUB_SUBSCRIBE_KEY, userId: user.uid });
+        pn.addListener({
+          signal: ev => {
+            const sig = ev.message;
+            if (!sig || ev.channel !== activeConversationId) return;
+            if (sig.fromUid === (currentUser && currentUser.uid)) return;
+            if (sig.type === "typing") handleTyping(sig);
+          }
+        });
+      } catch (err) {
+        console.warn("PubNub init failed", err);
+        pn = null;
+      }
+    }
+
+    function teardownPubNub() {
+      if (!pn) return;
+      try { pn.unsubscribeAll(); pn.removeAllListeners(); if (pn.destroy) pn.destroy(); } catch (e) { /* ignore */ }
+      pn = null;
+    }
+
+    function sendTypingSignal(conversationId, isTyping) {
+      if (!pn || !conversationId || !currentUser) return;
+      pn.signal({ channel: conversationId, message: { type: "typing", fromUid: currentUser.uid, isTyping } }).catch(() => {});
+    }
+
+    function handleTyping(sig) {
+      const name = activeConversationData && activeConversationData.isGroup
+        ? resolveDisplayName(sig.fromUid)
+        : (activeOtherUser && activeOtherUser.displayName);
+      clearTimeout(remoteTypingTimer);
+      els.typing.textContent = sig.isTyping && name ? `${name} is typing...` : "";
+      if (sig.isTyping) remoteTypingTimer = setTimeout(() => { els.typing.textContent = ""; }, 3000);
+    }
+
+    // ── Rendering ──
+    function renderConversations() {
+      els.conversations.replaceChildren();
+      if (!conversations.length) {
+        const p = document.createElement("p");
+        p.className = "list-empty";
+        p.textContent = "No conversations yet";
+        els.conversations.append(p);
+        return;
+      }
+      conversations.forEach(item => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `conversation ${item.id === activeConversationId ? "active" : ""}`;
+        button.dataset.conversationId = item.id;
+        const av = document.createElement("span");
+        av.className = "avatar small";
+        setAvatar(item.user.displayName, av);
+        const copy = document.createElement("span");
+        copy.className = "conversation-copy";
+        const title = document.createElement("strong");
+        title.append(nameMarkup(item.user));
+        const preview = document.createElement("small");
+        preview.textContent = (item.data && item.data.lastMessage && item.data.lastMessage.text) || "Start a conversation";
+        copy.append(title, preview);
+        button.append(av, copy);
+        els.conversations.append(button);
+      });
+    }
+
+    function renderSearchResults(list, container = els.searchResults) {
+      container.replaceChildren();
+      list.forEach(user => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "search-result";
+        button.dataset.uid = user.uid;
+        const av = document.createElement("span");
+        av.className = "avatar tiny";
+        setAvatar(user.displayName, av);
+        const copy = document.createElement("span");
+        const name = document.createElement("strong");
+        name.append(nameMarkup(user));
+        const email = document.createElement("small");
+        email.textContent = user.email || "";
+        copy.append(name, email);
+        button.append(av, copy);
+        container.append(button);
+      });
+    }
+
+    function renderMemberPicker() {
+      const term = els.groupMemberSearch.value.trim().toLowerCase();
+      const list = term ? users.filter(u => `${u.displayName} ${u.email}`.toLowerCase().includes(term)) : users;
+      els.groupMemberList.replaceChildren();
+      if (!list.length) {
+        const p = document.createElement("p");
+        p.className = "list-empty";
+        p.textContent = "No one found";
+        els.groupMemberList.append(p);
+        return;
+      }
+      list.forEach(user => {
+        const label = document.createElement("label");
+        label.className = "pick-row";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.dataset.uid = user.uid;
+        cb.checked = groupSelectedUids.has(user.uid);
+        const copy = document.createElement("div");
+        const name = document.createElement("strong");
+        name.append(nameMarkup(user));
+        const email = document.createElement("small");
+        email.textContent = user.email || "";
+        copy.append(name, email);
+        label.append(cb, copy);
+        els.groupMemberList.append(label);
+      });
+    }
+
+    function refreshManageModal() {
+      if (els.manageModal.classList.contains("hidden")) return;
+      if (!activeConversationData || !activeConversationData.isGroup) {
+        els.manageModal.classList.add("hidden");
+        return;
+      }
+      const memberUids = Object.keys(activeConversationData.participants || {});
+      els.manageMembersList.replaceChildren();
+      memberUids.forEach(uid => {
+        const user = uid === currentUser.uid
+          ? { uid, displayName: currentUser.displayName || "You", isSelf: true }
+          : (userRecord(uid) || { uid, displayName: "Unknown user" });
+        const row = document.createElement("div");
+        row.className = "member-row";
+        const av = document.createElement("span");
+        av.className = "avatar tiny";
+        setAvatar(user.displayName, av);
+        const copy = document.createElement("div");
+        const name = document.createElement("strong");
+        name.append(nameMarkup(user));
+        if (user.isSelf) name.append(" (you)");
+        copy.append(name);
+        row.append(av, copy);
+        if (!user.isSelf) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "member-remove";
+          btn.title = "Remove from group";
+          btn.textContent = "×";
+          btn.addEventListener("click", () => removeMemberFromGroup(activeConversationId, uid).catch(fail));
+          row.append(btn);
+        }
+        els.manageMembersList.append(row);
+      });
+    }
+
+    function setStatus(text, online) {
+      els.chatStatus.className = `status ${online ? "online" : ""}`;
+      els.chatStatus.replaceChildren(document.createElement("i"), document.createTextNode(text));
+    }
+
+    function refreshChatHeader() {
+      if (!activeConversationId || !activeOtherUser) return;
+      els.chatName.replaceChildren(nameMarkup(activeOtherUser));
+      setAvatar(activeOtherUser.displayName, els.chatAvatar);
+      const isGroup = !!(activeConversationData && activeConversationData.isGroup);
+      els.membersButton.classList.toggle("hidden", !isGroup);
+      if (isGroup) {
+        const count = Object.keys(activeConversationData.participants || {}).length;
+        setStatus(`${count} member${count === 1 ? "" : "s"}`, false);
+      } else {
+        const online = activeOtherUser.online === true;
+        setStatus(online ? "Online" : "Offline", online);
+      }
+    }
+
     function dateLabel(ts) {
- {
-  const date = new Date(ts;
+      const date = new Date(ts);
       const today = new Date();
       const yest = new Date();
       yest.setDate(today.getDate() - 1);
@@ -1036,351 +898,546 @@
     }
 
     function showDateIfNeeded(ts) {
- {
-  const label = dateLabel(ts;
-      if (label !== lastDateShown) {
-        lastDateShown = label;
-        addDateSeparator(label;
+      const label = dateLabel(ts);
+      if (label === lastDateShown) return;
+      lastDateShown = label;
+      const sep = document.createElement("div");
+      sep.className = "date-separator";
+      const span = document.createElement("span");
+      span.textContent = label;
+      sep.append(span);
+      els.messages.append(sep);
+    }
+
+    function closePopovers() {
+      document.querySelectorAll(".reaction-popover").forEach(p => p.remove());
+    }
+
+    function buildReactionPopover(row, messageKey) {
+      const had = row.querySelector(".reaction-popover");
+      closePopovers();
+      if (had) return;
+      const popover = document.createElement("div");
+      popover.className = "reaction-popover";
+      REACTION_EMOJIS.forEach(emoji => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = emoji;
+        btn.addEventListener("click", () => {
+          reactToMessage(messageKey, emoji);
+          closePopovers();
+        });
+        popover.append(btn);
+      });
+      row.append(popover);
+    }
+
+    function renderReactions(bubble, reactions) {
+      let container = bubble.querySelector(".msg-reactions");
+      if (!container) {
+        container = document.createElement("div");
+        container.className = "msg-reactions";
+        bubble.append(container);
+      }
+      container.replaceChildren();
+      const messageKey = bubble.parentElement.dataset.messageKey;
+      const grouped = {};
+      Object.entries(reactions || {}).forEach(([uid, emoji]) => {
+        if (!emoji) return;
+        (grouped[emoji] = grouped[emoji] || []).push(uid);
+      });
+      Object.entries(grouped).forEach(([emoji, uids]) => {
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = `reaction-pill ${currentUser && uids.includes(currentUser.uid) ? "mine" : ""}`;
+        const glyph = document.createElement("span");
+        glyph.textContent = emoji;
+        const count = document.createElement("span");
+        count.textContent = uids.length;
+        pill.append(glyph, count);
+        pill.addEventListener("click", () => reactToMessage(messageKey, emoji));
+        container.append(pill);
+      });
+    }
+
+    function addMessage(message, own, senderUser) {
+      const row = document.createElement("article");
+      row.className = `message-row ${own ? "own" : "other"}`;
+      row.dataset.messageKey = message.key;
+
+      const bubble = document.createElement("div");
+      bubble.className = "message-bubble";
+      if (senderUser) {
+        const label = document.createElement("span");
+        label.className = "sender-name";
+        label.append(nameMarkup(senderUser));
+        bubble.append(label);
+      }
+      const text = document.createElement("p");
+      text.textContent = message.text;
+      const meta = document.createElement("footer");
+      const time = document.createElement("span");
+      time.textContent = new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      meta.append(time);
+      bubble.append(text, meta);
+
+      const actions = document.createElement("div");
+      actions.className = "msg-actions";
+      const reactBtn = document.createElement("button");
+      reactBtn.className = "react-button";
+      reactBtn.type = "button";
+      reactBtn.title = "React";
+      reactBtn.textContent = "☺";
+      reactBtn.addEventListener("click", () => buildReactionPopover(row, message.key));
+      actions.append(reactBtn);
+      if (own) {
+        const delBtn = document.createElement("button");
+        delBtn.className = "message-delete";
+        delBtn.type = "button";
+        delBtn.title = "Delete message";
+        delBtn.textContent = "×";
+        delBtn.addEventListener("click", () => deleteOwnMessage(message.key));
+        actions.append(delBtn);
+      }
+
+      if (own) row.append(actions, bubble);
+      else row.append(bubble, actions);
+
+      const nearBottom = els.messages.scrollHeight - els.messages.scrollTop - els.messages.clientHeight < 140;
+      els.messages.append(row);
+      renderReactions(bubble, message.reactions);
+      if (own || nearBottom) els.messages.scrollTop = els.messages.scrollHeight;
+    }
+
+    // ── Messages (Firebase listeners) ──
+    function messageIsValid(m) {
+      return m && typeof m.text === "string" && typeof m.uid === "string" && typeof m.createdAt === "number";
+    }
+
+    function attachMessageListeners(cid) {
+      const r = ref(db, `messages/${cid}`);
+      const stops = [
+        onChildAdded(r, snap => {
+          if (cid !== activeConversationId) return;
+          const m = { ...snap.val(), key: snap.key };
+          if (!messageIsValid(m) || activeMessages[m.key]) return;
+          activeMessages[m.key] = m;
+          showDateIfNeeded(m.createdAt);
+          const own = m.uid === currentUser.uid;
+          const isGroup = activeConversationData && activeConversationData.isGroup;
+          const sender = !own && isGroup ? { uid: m.uid, displayName: resolveDisplayName(m.uid) } : null;
+          addMessage(m, own, sender);
+        }, fail),
+        onChildChanged(r, snap => {
+          if (cid !== activeConversationId) return;
+          const m = { ...snap.val(), key: snap.key };
+          if (!messageIsValid(m)) return;
+          activeMessages[m.key] = m;
+          const row = els.messages.querySelector(`[data-message-key="${CSS.escape(m.key)}"]`);
+          if (row) renderReactions(row.querySelector(".message-bubble"), m.reactions);
+        }, fail),
+        onChildRemoved(r, snap => {
+          if (cid !== activeConversationId) return;
+          delete activeMessages[snap.key];
+          const row = els.messages.querySelector(`[data-message-key="${CSS.escape(snap.key)}"]`);
+          if (row) row.remove();
+        }, fail)
+      ];
+      messagesStop = () => stops.forEach(stop => stop());
+    }
+
+    function detachMessageListeners() {
+      if (messagesStop) { messagesStop(); messagesStop = null; }
+    }
+
+    async function sendMessage(event) {
+      event.preventDefault();
+      const text = els.messageInput.value.trim();
+      if (!text || !activeConversationId || !currentUser) return;
+      const cid = activeConversationId;
+      const msgRef = push(ref(db, `messages/${cid}`));
+      const msg = { conversationId: cid, uid: currentUser.uid, text, createdAt: Date.now() };
+      els.messageInput.value = "";
+      els.messageInput.style.height = "auto";
+      clearTimeout(localTypingTimer);
+      lastTypingSent = 0;
+      sendTypingSignal(cid, false);
+      try {
+        await set(msgRef, msg);
+        await update(ref(db, `conversations/${cid}`), {
+          lastMessage: { text, uid: currentUser.uid, createdAt: msg.createdAt },
+          updatedAt: msg.createdAt
+        });
+      } catch (err) {
+        if (cid === activeConversationId && !els.messageInput.value) els.messageInput.value = text;
+        fail(err);
       }
     }
 
-    function currentConversationItems(data) {
- {
-  return Object.entries(data || {}).filter(([, v]) => v?.participants?.[currentUser.uid] === true).map(([id, v]) => ({
-        id,
-        data: v,
-        user: conversationPeer(id, v)
-      })).sort((a,b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0));
+    async function deleteOwnMessage(key) {
+      const cid = activeConversationId;
+      if (!cid) return;
+      try {
+        await remove(ref(db, `messages/${cid}/${key}`));
+        const remaining = Object.values(activeMessages).sort((a, b) => a.createdAt - b.createdAt);
+        const last = remaining[remaining.length - 1];
+        await update(ref(db, `conversations/${cid}`), {
+          lastMessage: last ? { text: last.text, uid: last.uid, createdAt: last.createdAt } : null
+        });
+      } catch (err) { fail(err); }
+    }
+
+    async function reactToMessage(messageKey, emoji) {
+      const cid = activeConversationId;
+      if (!cid || !currentUser) return;
+      const current = activeMessages[messageKey] && activeMessages[messageKey].reactions
+        ? activeMessages[messageKey].reactions[currentUser.uid] : null;
+      const next = current === emoji ? null : emoji;
+      try {
+        await set(ref(db, `messages/${cid}/${messageKey}/reactions/${currentUser.uid}`), next);
+      } catch (err) { fail(err); }
+    }
+
+    // ── Conversations ──
+    function rebuildConversations() {
+      conversations = Object.entries(conversationsRaw || {})
+        .filter(([, v]) => v && v.participants && v.participants[currentUser.uid] === true)
+        .map(([id, v]) => ({ id, data: v, user: conversationPeer(id, v) }))
+        .sort((a, b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0));
+      renderConversations();
+      if (activeConversationId) {
+        const active = conversations.find(c => c.id === activeConversationId);
+        if (active) {
+          activeConversationData = active.data;
+          activeOtherUser = active.user;
+          refreshChatHeader();
+        } else {
+          closeActiveConversation();
+        }
+      }
+      refreshManageModal();
+    }
+
+    function watchUsers() {
+      usersStop = onValue(ref(db, "users"), snap => {
+        users = Object.entries(snap.val() || {})
+          .map(([uid, v]) => ({ ...v, uid, displayName: (v && v.displayName) || "Nexus user" }))
+          .filter(u => u.uid !== currentUser.uid);
+        if (conversationsRaw) rebuildConversations();
+        if (!els.groupModal.classList.contains("hidden")) renderMemberPicker();
+        searchUsers(els.searchInput.value);
+      }, fail);
     }
 
     function watchConversations() {
- {
-  if (conversationStop) conversationStop();
-      conversationStop = onValue(ref(db, "conversations"), snap => {
-        conversations = currentConversationItems(snap.val();
-        ui.renderConversations(conversations, activeConversationId;
-        if (activeConversationId) {
-          const active = conversations.find(c => c.id === activeConversationId;
-          if (active) {
-            activeConversationData = active.data;
-            activeOtherUser = active.user;
-            ui.setChatUser(activeOtherUser, activeConversationData;
-          } else closeActiveConversation();
-        }
-      });
-    }
-
-    async function loadUsers() {
- {
-  const snap = await get(ref(db, "users"));
-      users = Object.entries(snap.val() || {}).map(([uid, v]) => ({ uid, ...v })).filter(u => u.uid !== currentUser.uid;
+      conversationsStop = onValue(ref(db, "conversations"), snap => {
+        conversationsRaw = snap.val() || {};
+        rebuildConversations();
+      }, fail);
     }
 
     async function startConversation(otherUser) {
- {
-  const id = conversationIdFor(currentUser.uid, otherUser.uid;
-      const participants = { [currentUser.uid]: true, [otherUser.uid]: true };
-      await update(ref(db, `conversations/${id}`), { participants, updatedAt: Date.now() });
-      ui.renderSearchResults([]);
-      els.searchInput.value = "";
-      await openConversation({ id, user: otherUser, data: { participants } });;
+      if (!otherUser) return;
+      const id = conversationIdFor(currentUser.uid, otherUser.uid);
+      const existing = conversations.find(c => c.id === id);
+      try {
+        if (!existing) {
+          await update(ref(db, `conversations/${id}`), {
+            participants: { [currentUser.uid]: true, [otherUser.uid]: true },
+            updatedAt: Date.now()
+          });
+        }
+        els.searchInput.value = "";
+        renderSearchResults([]);
+        openConversation(existing || { id, user: otherUser, data: { participants: { [currentUser.uid]: true, [otherUser.uid]: true } } });
+      } catch (err) { fail(err); }
     }
 
-    function handleIncomingMessage(msg) {
- {
-  if (msg.conversationId !== activeConversationId) return;
-      showDateIfNeeded(msg.createdAt;
-      const senderName = activeConversationData?.isGroup ? resolveDisplayName(msg.uid) : null;
-      ui.addMessage(msg, false, { onDelete: deleteOwnMessage, onReact: reactToMessage, reactions: activeReactions[msg.key], senderName });
-      ui.scrollMessages();
-    }
-
-    function handleTyping(sig) {
- {
-  if (sig.conversationId && sig.conversationId !== activeConversationId) return;
-      const typerName = activeConversationData?.isGroup ? resolveDisplayName(sig.fromUid) : activeOtherUser?.displayName;
-      els.typing.textContent = sig.isTyping && typerName ? `${typerName} is typing...` : "";
-      if (sig.isTyping) {
-        clearTimeout(typingTimer;
-        typingTimer = setTimeout(() => els.typing.textContent = "", 2400;
+    function openConversation(item) {
+      if (activeConversationId === item.id && !els.chatView.classList.contains("hidden")) {
+        document.body.classList.add("chat-open");
+        return;
       }
-    }
-
-    function handleReaction(sig) {
- {
-  if (sig.conversationId !== activeConversationId) return;
-      activeReactions[sig.messageKey] = activeReactions[sig.messageKey] || {};
-      if (sig.emoji) activeReactions[sig.messageKey][sig.uid] = sig.emoji;
-      else delete activeReactions[sig.messageKey][sig.uid];
-      ui.updateMessageReactions(sig.messageKey, activeReactions[sig.messageKey], reactToMessage;
-    }
-
-    async function openConversation(item) {
- {
-  if (activeConversationId && activeConversationId !== item.id) unsubscribeFromConversation(activeConversationId;
+      detachMessageListeners();
+      if (activeConversationId && pn) pn.unsubscribe({ channels: [activeConversationId] });
       activeConversationId = item.id;
-;
-  activeOtherUser = item.user;;
-  activeConversationData = item.data;
-;  lastDateShown = ""; activeReactions = {};
+      activeOtherUser = item.user;
+      activeConversationData = item.data;
+      activeMessages = {};
+      lastDateShown = "";
+      clearTimeout(remoteTypingTimer);
       els.emptyChat.classList.add("hidden");
       els.chatView.classList.remove("hidden");
-      ui.setChatUser(activeOtherUser, activeConversationData;
-      ui.renderConversations(conversations, activeConversationId;
       els.messages.replaceChildren();
       els.typing.textContent = "";
-      subscribeToConversation(activeConversationId;
-      if (activeConversationData?.isGroup) {
-        if (presenceStop) { presenceStop(); presenceStop = null; }
-      } else {
-        watchPresence(activeOtherUser.uid;
-      }
-      const snap = await get(ref(db, `messages/${activeConversationId}`));
-      const history = Object.entries(snap.val() || {}).map(([key, m]) => ({ key, ...m })).sort((a,b) => a.createdAt - b.createdAt;
-      history.forEach(m => {
-        showDateIfNeeded(m.createdAt;
-        const own = m.uid === currentUser.uid;
-        const senderName = !own && activeConversationData?.isGroup ? resolveDisplayName(m.uid) : null;
-        ui.addMessage(m, own, { onDelete: deleteOwnMessage, onReact: reactToMessage, reactions: activeReactions[m.key], senderName });
-      });
-      ui.scrollMessages();
+      refreshChatHeader();
+      renderConversations();
+      if (pn) pn.subscribe({ channels: [item.id] });
+      attachMessageListeners(item.id);
       document.body.classList.add("chat-open");
     }
 
     function closeActiveConversation() {
- {
-  if (activeConversationId) unsubscribeFromConversation(activeConversationId;
-      if (presenceStop) { presenceStop(); presenceStop = null; }
-      activeConversationId = null; activeOtherUser = null; activeConversationData = null;
+      detachMessageListeners();
+      if (activeConversationId && pn) pn.unsubscribe({ channels: [activeConversationId] });
+      clearTimeout(remoteTypingTimer);
+      clearTimeout(localTypingTimer);
+      activeConversationId = null;
+      activeOtherUser = null;
+      activeConversationData = null;
+      activeMessages = {};
+      els.messages.replaceChildren();
+      els.typing.textContent = "";
       els.chatView.classList.add("hidden");
       els.emptyChat.classList.remove("hidden");
+      els.manageModal.classList.add("hidden");
       document.body.classList.remove("chat-open");
-    }
-
-    function watchPresence(uid) {
- {
-  if (presenceStop) presenceStop();
-      presenceStop = onValue(ref(db, `users/${uid}/online`), snap => {
-        const online = snap.val() === true;
-        els.chatStatus.className = `status ${online ? "online" : ""}`;
-        els.chatStatus.innerHTML = `<i></i>${online ? "Online" : "Offline"}`;
-      });
-    }
-
-    function reactToMessage(messageKey, emoji) {
- {
-  if (!activeConversationId || !currentUser) return;
-      const current = activeReactions[messageKey]?.[currentUser.uid];
-      const next = current === emoji ? null : emoji;
-      activeReactions[messageKey] = activeReactions[messageKey] || {};
-      if (next) activeReactions[messageKey][currentUser.uid] = next;
-      else delete activeReactions[messageKey][currentUser.uid];
-      ui.updateMessageReactions(messageKey, activeReactions[messageKey], reactToMessage;
-      sendReactionSignal(activeConversationId, messageKey, currentUser.uid, next;
-    }
-
-    async function sendMessage(event) {
- {
-  event.preventDefault();
-      const text = els.messageInput.value.trim();
-      if (!text || !activeConversationId || !activeOtherUser) return;
-      const msgRef = push(ref(db, `messages/${activeConversationId}`));
-      const msg = { key: msgRef.key, conversationId: activeConversationId, uid: currentUser.uid, text, createdAt: Date.now() };
-      showDateIfNeeded(msg.createdAt;
-      ui.addMessage(msg, true, { onDelete: deleteOwnMessage, onReact: reactToMessage, reactions: null });
-      ui.scrollMessages();
-      els.messageInput.value = ""; els.messageInput.style.height = "auto";
-      sendTypingSignal(activeConversationId, currentUser.uid, false;
-      try {
-        await set(msgRef, msg;
-        await update(ref(db, `conversations/${activeConversationId}`), { lastMessage: { text, uid: currentUser.uid, createdAt: msg.createdAt }, updatedAt: msg.createdAt });
-        publishMessage(activeConversationId, msg;
-      } catch (err) {
-        ui.toast(authError(err), "error";
-      }
-    }
-
-    async function deleteOwnMessage(key, row) {
- {
-  if (!activeConversationId) return;
-      await remove(ref(db, `messages/${activeConversationId}/${key}`));
-      delete activeReactions[key];
-      row.remove();
+      renderConversations();
     }
 
     async function deleteConversation() {
- {
-  if (!activeConversationId) return;
-      if (activeConversationData?.isGroup) {
-        await leaveActiveGroup();
-        return;
-      }
+      if (!activeConversationId) return;
+      if (activeConversationData && activeConversationData.isGroup) { await leaveActiveGroup(); return; }
       if (!confirm("Delete this conversation for you and the other person?")) return;
-      await Promise.all([
-        remove(ref(db, `conversations/${activeConversationId}`)),
-        remove(ref(db, `messages/${activeConversationId}`))
-      ]);
-      closeActiveConversation();
-      ui.toast("Conversation deleted");
+      const id = activeConversationId;
+      try {
+        await Promise.all([remove(ref(db, `conversations/${id}`)), remove(ref(db, `messages/${id}`))]);
+        closeActiveConversation();
+        toast("Conversation deleted");
+      } catch (err) { fail(err); }
     }
 
+    // ── Groups ──
     async function createGroup(name, memberUids) {
- {
-  const groupRef = push(ref(db, "conversations"));
+      const groupRef = push(ref(db, "conversations"));
       const participants = { [currentUser.uid]: true };
       memberUids.forEach(uid => { participants[uid] = true; });
       const now = Date.now();
-      await set(groupRef, { isGroup: true, name, participants, createdBy: currentUser.uid, createdAt: now, updatedAt: now });
-      return groupRef.key;
-
+      const data = { isGroup: true, name, participants, createdBy: currentUser.uid, createdAt: now, updatedAt: now };
+      await set(groupRef, data);
+      return { id: groupRef.key, data };
     }
 
     async function addMembersToGroup(conversationId, uids) {
- {
-  if (!uids.length) return;
+      if (!uids.length) return;
       const updates = { [`conversations/${conversationId}/updatedAt`]: Date.now() };
       uids.forEach(uid => { updates[`conversations/${conversationId}/participants/${uid}`] = true; });
       await update(ref(db), updates);
     }
 
     async function removeMemberFromGroup(conversationId, uid) {
- {
-  await update(ref(db, `conversations/${conversationId}/participants`), { [uid]: null, updatedAt: Date.now() });
-    }
-
-    async function renameActiveGroup(name) {
- {
-  if (!activeConversationId) return;
-      await update(ref(db, `conversations/${activeConversationId}`), { name, updatedAt: Date.now() });
+      await update(ref(db), {
+        [`conversations/${conversationId}/participants/${uid}`]: null,
+        [`conversations/${conversationId}/updatedAt`]: Date.now()
+      });
     }
 
     async function leaveActiveGroup() {
- {
-  if (!activeConversationId || !confirm("Leave this group?")) return;
+      if (!activeConversationId || !activeConversationData || !activeConversationData.isGroup) return;
+      if (!confirm("Leave this group?")) return;
       const id = activeConversationId;
-      const snap = await get(ref(db, `conversations/${id}/participants`));
-      const participants = snap.val() || {};
-      delete participants[currentUser.uid];
-      if (Object.keys(participants).length === 0) {
-        await Promise.all([
-          remove(ref(db, `conversations/${id}`)),
-          remove(ref(db, `messages/${id}`))
-        ]);
-      } else {
-        await update(ref(db, `conversations/${id}/participants`), { [currentUser.uid]: null, updatedAt: Date.now() });
-      }
-      closeActiveConversation();
-      els.manageModal.classList.add("hidden");
-      ui.toast("Left the group");
-    }
-
-    async function setPresence(user) {
- {
-  const onlineRef = ref(db, `users/${user.uid}/online`);
-      await update(ref(db, `users/${user.uid}`), { uid: user.uid, email: user.email, displayName: user.displayName || "Nexus user", online: true });
-      await onDisconnect(onlineRef).set(false;
+      const others = Object.keys(activeConversationData.participants || {}).filter(uid => uid !== currentUser.uid);
+      try {
+        if (!others.length) {
+          await Promise.all([remove(ref(db, `conversations/${id}`)), remove(ref(db, `messages/${id}`))]);
+        } else {
+          await removeMemberFromGroup(id, currentUser.uid);
+        }
+        els.manageModal.classList.add("hidden");
+        if (activeConversationId === id) closeActiveConversation();
+        toast("Left the group");
+      } catch (err) { fail(err); }
     }
 
     function searchUsers(value) {
- {
-  const term = value.trim().toLowerCase();
-      ui.renderSearchResults(term ? users.filter(u => `${u.displayName} ${u.email}`.toLowerCase().includes(term)).slice(0, 8) : []);
+      const term = String(value || "").trim().toLowerCase();
+      renderSearchResults(term
+        ? users.filter(u => `${u.displayName} ${u.email}`.toLowerCase().includes(term)).slice(0, 8)
+        : []);
     }
 
-    // ── Landing handlers ──
-    function goToAuth(signUp) {
- {
-  document.getElementById('landing').classList.add('hidden');
-      document.getElementById('auth-screen').classList.remove('hidden');
-      document.getElementById('app-screen').classList.add('hidden');
-      if (signUp) ui.setAuthMode(true;
-    }
-
-    document.getElementById('land-getstarted')?.addEventListener('click', () => goToAuth(true);
-    document.getElementById('land-getstarted2')?.addEventListener('click', () => goToAuth(true);
-    document.getElementById('land-signin')?.addEventListener('click', () => goToAuth(false);
-    document.getElementById('land-learnmore')?.addEventListener('click', () => {
-      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-    });
-
-    // ── Bind all UI events ──
-    function bindEvents() {
- {
-  let signUpMode = false;
-      ui.setAuthMode(false;
-      els.authSwitch.addEventListener("click", () => {
-        signUpMode = !signUpMode;
-
-      ui.setAuthMode(signUpMode;
-      });
-
-      els.authForm.addEventListener("submit", async e => {
-        e.preventDefault();
-        els.authError.textContent = "";
-        try {
-          if (signUpMode) await register(els.emailInput.value.trim(), els.passwordInput.value, els.nameInput.value.trim() || "Nexus user");
-          else await login(els.emailInput.value.trim(), els.passwordInput.value;
-        } catch (err) {
-          els.authError.textContent = authError(err;
+    // ── Presence ──
+    function startPresence(user) {
+      const userRef = ref(db, `users/${user.uid}`);
+      const onlineRef = ref(db, `users/${user.uid}/online`);
+      const base = { uid: user.uid, email: user.email || "" };
+      if (user.displayName) base.displayName = user.displayName;
+      update(userRef, base).catch(fail);
+      connectedStop = onValue(ref(db, ".info/connected"), snap => {
+        if (snap.val() === true) {
+          onDisconnect(onlineRef).set(false).then(() => set(onlineRef, true)).catch(() => {});
         }
       });
+    }
 
-      els.logoutButton.addEventListener("click", () => logout().catch(err => ui.toast(authError(err, "error")));
-      els.searchInput.addEventListener("input", e => searchUsers(e.target.value);
+    // ── Session ──
+    function beginSession(user) {
+      if (sessionUid === user.uid) return;
+      if (sessionUid) endSession();
+      sessionUid = user.uid;
+      currentUser = user;
+      showScreen("app");
+      els.currentName.replaceChildren(nameMarkup({ uid: user.uid, displayName: user.displayName || "Nexus user" }));
+      els.currentEmail.textContent = user.email || "";
+      setAvatar(user.displayName || "Nexus user", els.currentAvatar);
+      startPresence(user);
+      watchUsers();
+      watchConversations();
+      initPubNub(user);
+    }
+
+    function endSession() {
+      [usersStop, conversationsStop, connectedStop].forEach(stop => { if (stop) stop(); });
+      usersStop = conversationsStop = connectedStop = null;
+      detachMessageListeners();
+      teardownPubNub();
+      clearTimeout(remoteTypingTimer);
+      clearTimeout(localTypingTimer);
+      currentUser = null;
+      sessionUid = null;
+      users = [];
+      conversations = [];
+      conversationsRaw = null;
+      activeConversationId = null;
+      activeOtherUser = null;
+      activeConversationData = null;
+      activeMessages = {};
+      els.messages.replaceChildren();
+      els.conversations.replaceChildren();
+      els.typing.textContent = "";
+      els.chatView.classList.add("hidden");
+      els.emptyChat.classList.remove("hidden");
+      els.manageModal.classList.add("hidden");
+      els.groupModal.classList.add("hidden");
+      els.modal.classList.add("hidden");
+      els.searchInput.value = "";
+      renderSearchResults([]);
+      document.body.classList.remove("chat-open");
+    }
+
+    async function register(email, password, displayName) {
+      registering = true;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName });
+        try {
+          await update(ref(db, `users/${cred.user.uid}`), { uid: cred.user.uid, email: cred.user.email || email, displayName });
+        } catch (e) { console.warn("Profile write failed", e); }
+        registering = false;
+        beginSession(cred.user);
+      } finally {
+        registering = false;
+      }
+    }
+
+    async function logout() {
+      try {
+        if (currentUser) await set(ref(db, `users/${currentUser.uid}/online`), false);
+      } catch (e) { /* ignore */ }
+      await signOut(auth);
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      els.authError.textContent = "";
+      if (!auth) {
+        els.authError.textContent = "Can't reach Firebase from here. Open this page in a normal browser tab over https:// or localhost (not a sandboxed preview or file://).";
+        return;
+      }
+      els.authSubmit.disabled = true;
+      try {
+        const email = els.emailInput.value.trim();
+        const password = els.passwordInput.value;
+        if (signUpMode) await register(email, password, els.nameInput.value.trim() || "Nexus user");
+        else await signInWithEmailAndPassword(auth, email, password);
+        els.authForm.reset();
+      } catch (err) {
+        els.authError.textContent = errorText(err);
+      } finally {
+        els.authSubmit.disabled = false;
+      }
+    }
+
+    // ── Events ──
+    function goToAuth(signUp) {
+      showScreen("auth");
+      setAuthMode(signUp);
+    }
+
+    function bindEvents() {
+      $("#land-getstarted").addEventListener("click", () => goToAuth(true));
+      $("#land-getstarted2").addEventListener("click", () => goToAuth(true));
+      $("#land-signin").addEventListener("click", () => goToAuth(false));
+      $("#land-learnmore").addEventListener("click", () => $("#features").scrollIntoView({ behavior: "smooth" }));
+
+      setAuthMode(false);
+      els.authSwitch.addEventListener("click", e => {
+        if (e.target.closest("button")) setAuthMode(!signUpMode);
+      });
+      els.authForm.addEventListener("submit", handleAuthSubmit);
+
+      els.logoutButton.addEventListener("click", () => logout().catch(fail));
+      els.searchInput.addEventListener("input", e => searchUsers(e.target.value));
       els.searchResults.addEventListener("click", e => {
         const btn = e.target.closest("[data-uid]");
-        if (btn) startConversation(userRecord(btn.dataset.uid;);
+        if (btn) startConversation(userRecord(btn.dataset.uid));
       });
-
       els.conversations.addEventListener("click", e => {
         const btn = e.target.closest("[data-conversation-id]");
-        const item = conversations.find(c => c.id === btn?.dataset.conversationId);
-        if (item) openConversation(item;
+        const item = btn && conversations.find(c => c.id === btn.dataset.conversationId);
+        if (item) openConversation(item);
       });
 
+      // Profile
+      els.editProfile.addEventListener("click", () => {
+        els.modalInput.value = (currentUser && currentUser.displayName) || "";
+        els.profileUid.textContent = currentUser ? currentUser.uid : "";
+        els.modal.classList.remove("hidden");
+        els.modalInput.focus();
+      });
+      els.closeModal.addEventListener("click", () => els.modal.classList.add("hidden"));
       els.modalForm.addEventListener("submit", async e => {
         e.preventDefault();
         const name = els.modalInput.value.trim();
-        if (!name) return;
+        if (!name || !currentUser) return;
         try {
-          await changeDisplayName(currentUser, name;
+          await updateProfile(currentUser, { displayName: name });
           await update(ref(db, `users/${currentUser.uid}`), { displayName: name });
-          els.currentName.replaceChildren(ui.nameMarkup(name;
-          if (activeOtherUser) ui.setChatUser(activeOtherUser, activeConversationData;
+          els.currentName.replaceChildren(nameMarkup({ uid: currentUser.uid, displayName: name }));
+          setAvatar(name, els.currentAvatar);
           els.modal.classList.add("hidden");
-          ui.toast("Profile updated");
-        } catch (err) {
-          ui.toast(authError(err, "error";
-        }
+          toast("Profile updated");
+        } catch (err) { fail(err); }
       });
 
-      els.editProfile.addEventListener("click", () => {
-        els.modalInput.value = currentUser?.displayName || "";
-        els.modal.classList.remove("hidden";
-      });
-      els.closeModal.addEventListener("click", () => els.modal.classList.add("hidden"));
-      els.deleteConversation.addEventListener("click", deleteConversation;
-      els.composer.addEventListener("submit", sendMessage;
-
+      // Chat
+      els.deleteConversation.addEventListener("click", deleteConversation);
+      els.backButton.addEventListener("click", closeActiveConversation);
+      els.composer.addEventListener("submit", sendMessage);
       els.messageInput.addEventListener("keydown", e => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
           e.preventDefault();
           els.composer.requestSubmit();
         }
       });
-
       els.messageInput.addEventListener("input", () => {
         els.messageInput.style.height = "auto";
         els.messageInput.style.height = Math.min(els.messageInput.scrollHeight, 140) + "px";
-        if (activeConversationId) {
-          sendTypingSignal(activeConversationId, currentUser.uid, true;
-          clearTimeout(typingTimer;
-          typingTimer = setTimeout(() => sendTypingSignal(activeConversationId, currentUser.uid, false,, 1100);
+        const cid = activeConversationId;
+        if (!cid) return;
+        const now = Date.now();
+        if (now - lastTypingSent > 1500) {
+          sendTypingSignal(cid, true);
+          lastTypingSent = now;
         }
+        clearTimeout(localTypingTimer);
+        localTypingTimer = setTimeout(() => {
+          sendTypingSignal(cid, false);
+          lastTypingSent = 0;
+        }, 1500);
       });
 
-      els.emojiButton.addEventListener("click", () => els.emojiPicker.classList.toggle("hidden");
-      els.emojiPicker.replaceChildren(...emojis.map(emoji => {
+      els.emojiPicker.replaceChildren(...EMOJIS.map(emoji => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.textContent = emoji;
@@ -1390,153 +1447,150 @@
         });
         return btn;
       }));
-      els.backButton.addEventListener("click", () => document.body.classList.remove("chat-open"));
-      els.menuButton?.addEventListener("click", () => document.body.classList.toggle("sidebar-open"));
+      els.emojiButton.addEventListener("click", () => els.emojiPicker.classList.toggle("hidden"));
+
+      document.addEventListener("click", e => {
+        if (!e.target.closest(".reaction-popover, .react-button")) closePopovers();
+        if (!e.target.closest("#emoji-picker, #emoji-button")) els.emojiPicker.classList.add("hidden");
+      });
+      document.addEventListener("keydown", e => {
+        if (e.key !== "Escape") return;
+        closePopovers();
+        els.emojiPicker.classList.add("hidden");
+        [els.modal, els.groupModal, els.manageModal].forEach(m => m.classList.add("hidden"));
+      });
 
       // Group creation
-      let groupSelectedUids = new Set();
-      function refreshGroupMemberPicker() {
-        const term = els.groupMemberSearch.value.trim().toLowerCase();
-        const filtered = term ? users.filter(u => `${u.displayName} ${u.email}`.toLowerCase().includes(term)) : users;
-        ui.renderMemberPicker(filtered, groupSelectedUids;
-      }
       els.newGroupButton.addEventListener("click", () => {
         groupSelectedUids = new Set();
-        els.groupNameInput.value = ""; els.groupMemberSearch.value = "";
-        refreshGroupMemberPicker();
+        els.groupNameInput.value = "";
+        els.groupMemberSearch.value = "";
+        renderMemberPicker();
         els.groupModal.classList.remove("hidden");
         els.groupNameInput.focus();
       });
       els.closeGroupModal.addEventListener("click", () => els.groupModal.classList.add("hidden"));
-      els.groupMemberSearch.addEventListener("input", refreshGroupMemberPicker;
+      els.groupMemberSearch.addEventListener("input", renderMemberPicker);
       els.groupMemberList.addEventListener("change", e => {
         const cb = e.target.closest("input[type=checkbox]");
         if (!cb) return;
-        if (cb.checked) groupSelectedUids.add(cb.dataset.uid;
-        else groupSelectedUids.delete(cb.dataset.uid;
+        if (cb.checked) groupSelectedUids.add(cb.dataset.uid);
+        else groupSelectedUids.delete(cb.dataset.uid);
       });
       els.groupForm.addEventListener("submit", async e => {
         e.preventDefault();
         const name = els.groupNameInput.value.trim();
         if (!name || groupSelectedUids.size === 0) {
-          ui.toast("Name your group and pick at least one person", "error";
+          toast("Name your group and pick at least one person", "error");
           return;
         }
         try {
-          const id = await createGroup(name, [...groupSelectedUids];
+          const { id, data } = await createGroup(name, [...groupSelectedUids]);
           els.groupModal.classList.add("hidden");
-          await openConversation({ id, user: { isGroup: true, id, displayName: name }, data: { isGroup: true, name,, participants: { [currentUser.uid]: true, ...Object.fromEntries([...groupSelectedUids].map(uid => [uid, true])) } } });
-          ui.toast("Group created");
-        } catch (err) {
-          ui.toast(authError(err, "error";
-        }
+          openConversation({ id, user: { isGroup: true, id, displayName: name }, data });
+          toast("Group created");
+        } catch (err) { fail(err); }
       });
 
       // Group management
       els.membersButton.addEventListener("click", () => {
-        if (!activeConversationData?.isGroup) return;
+        if (!activeConversationData || !activeConversationData.isGroup) return;
         els.manageNameInput.value = activeConversationData.name || "";
         els.manageAddSearch.value = "";
-        ui.renderSearchResults([], els.manageAddResults;
-        const memberUsers = Object.keys(activeConversationData.participants || {}).map(uid => uid === currentUser.uid ? { uid, displayName: currentUser.displayName || "You" } : (userRecord(uid) || { uid,, displayName: "Unknown user" }));
-        ui.renderGroupMembersList(memberUsers, async uid => {
-          try {
-            await removeMemberFromGroup(activeConversationId, uid;
-          } catch (err) { ui.toast(authError(err, "error"); }
-        });
-        els.manageModal.classList.remove("hidden";
+        renderSearchResults([], els.manageAddResults);
+        els.manageModal.classList.remove("hidden");
+        refreshManageModal();
       });
       els.closeManageModal.addEventListener("click", () => els.manageModal.classList.add("hidden"));
       els.renameGroupForm.addEventListener("submit", async e => {
         e.preventDefault();
         const name = els.manageNameInput.value.trim();
-        if (!name) return;
+        if (!name || !activeConversationId) return;
         try {
-          await renameActiveGroup(name;
-          ui.toast("Group renamed");
-        } catch (err) { ui.toast(authError(err, "error"); }
+          await update(ref(db, `conversations/${activeConversationId}`), { name, updatedAt: Date.now() });
+          toast("Group renamed");
+        } catch (err) { fail(err); }
       });
       els.manageAddSearch.addEventListener("input", () => {
         const term = els.manageAddSearch.value.trim().toLowerCase();
-        const existing = new Set(Object.keys(activeConversationData?.participants || {});
-        const results = term ? users.filter(u => !existing.has(u.uid) && `${u.displayName} ${u.email}`.toLowerCase().includes(term)).slice(0, 8) : [];
-        ui.renderSearchResults(results, els.manageAddResults;
+        const existing = new Set(Object.keys((activeConversationData && activeConversationData.participants) || {}));
+        const results = term
+          ? users.filter(u => !existing.has(u.uid) && `${u.displayName} ${u.email}`.toLowerCase().includes(term)).slice(0, 8)
+          : [];
+        renderSearchResults(results, els.manageAddResults);
       });
       els.manageAddResults.addEventListener("click", async e => {
         const btn = e.target.closest("[data-uid]");
         if (!btn || !activeConversationId) return;
         try {
-          await addMembersToGroup(activeConversationId, [btn.dataset.uid];
+          await addMembersToGroup(activeConversationId, [btn.dataset.uid]);
           els.manageAddSearch.value = "";
-          ui.renderSearchResults([], els.manageAddResults;
-          ui.toast("Added to group");
-        } catch (err) { ui.toast(authError(err, "error"); }
+          renderSearchResults([], els.manageAddResults);
+          toast("Added to group");
+        } catch (err) { fail(err); }
       });
-      els.leaveGroupButton.addEventListener("click", leaveActiveGroup;
+      els.leaveGroupButton.addEventListener("click", leaveActiveGroup);
+
+      // Close modals by clicking the backdrop
+      [els.modal, els.groupModal, els.manageModal].forEach(m => {
+        m.addEventListener("mousedown", e => { if (e.target === m) m.classList.add("hidden"); });
+      });
     }
 
-    function beginSession(user) {
- {
-  currentUser = user;
-      ui.setCurrentAppUid(user.uid;
-      ui.showAuth(false;
-      els.currentName.replaceChildren(ui.nameMarkup(user.displayName || "Nexus user");
-      els.currentEmail.textContent = user.email || "";
-      ui.avatar(user.displayName, els.currentAvatar;
-      setPresence(user).catch(err => ui.toast(authError(err, "error")));
-      loadUsers().then(watchConversations).catch(err => ui.toast(authError(err, "error")));
-      initPubNub(user, { onMessage: handleIncomingMessage, onTyping: handleTyping, onReaction: handleReaction });
-    }
-
-    onAuthStateChanged(auth, user => {
- {
-  if (user) {
-        beginSession(user;
-        document.getElementById('landing').classList.add('hidden');
-      } else {
-        currentUser = null;
-        const onLanding = !document.getElementById('landing').classList.contains('hidden';
-        if (!onLanding) ui.showAuth(true;
-      }
-    });
     bindEvents();
+    if (auth) {
+      try {
+        onAuthStateChanged(auth, user => {
+          if (registering) return;
+          if (user) {
+            beginSession(user);
+          } else {
+            const wasSignedIn = !!sessionUid;
+            endSession();
+            showScreen(wasSignedIn ? "auth" : "landing");
+          }
+        }, err => console.error("Auth state error", err));
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
     // ── Particle background ──
-    (function() {
-      const cv = document.getElementById('particles');
-      const ctx = cv.getContext('2d');
-      let W, H, mouse = { x: -9999, y: -9999 };
+    (function () {
+      const cv = $("#particles");
+      const ctx = cv.getContext("2d");
+      const mouse = { x: -9999, y: -9999 };
+      const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       function resize() {
-        W = cv.width = innerWidth * devicePixelRatio;
-        H = cv.height = innerHeight * devicePixelRatio;
-        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0;
+        const dpr = window.devicePixelRatio || 1;
+        cv.width = innerWidth * dpr;
+        cv.height = innerHeight * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
       resize();
-      window.addEventListener('resize', resize);
-      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-      window.addEventListener('touchmove', e => {
+      window.addEventListener("resize", resize);
+      window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+      window.addEventListener("touchmove", e => {
         if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
       }, { passive: true });
 
-      const N = 60;
+      const N = innerWidth < 760 ? 35 : 60;
       const pts = Array.from({ length: N }, () => ({
         x: Math.random() * innerWidth,
         y: Math.random() * innerHeight,
-        vx: (Math.random() - .5) * .22,
-        vy: (Math.random() - .5) * .22,
-        r: Math.random() * 1.4 + .3,
-        a: Math.random() * .6 + .2,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        r: Math.random() * 1.4 + 0.3,
+        a: Math.random() * 0.6 + 0.2,
         pulse: Math.random() * Math.PI * 2
       }));
 
       function draw() {
- {
-  ctx.clearRect(0, 0, innerWidth, innerHeight);
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
 
-        // Lines
-        for ( (let i = 0; i < pts.length; i++) {
-          for ( (let j = i + 1; j < pts.length; j++) {
+        for (let i = 0; i < pts.length; i++) {
+          for (let j = i + 1; j < pts.length; j++) {
             const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d < 150) {
@@ -1550,28 +1604,25 @@
           }
         }
 
-        // Mouse attraction
         pts.forEach(p => {
           const dx = mouse.x - p.x, dy = mouse.y - p.y;
           const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < 180) {
+          if (d < 180 && d > 0.001) {
             ctx.beginPath();
             ctx.strokeStyle = `rgba(192,132,252,${(1 - d / 180) * 0.35})`;
             ctx.lineWidth = 0.8;
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(mouse.x, mouse.y);
             ctx.stroke();
-            p.vx += dx / d * 0.04;
-            p.vy += dy / d * 0.04;
+            p.vx += (dx / d) * 0.04;
+            p.vy += (dy / d) * 0.04;
           }
         });
 
-        // Dots
         pts.forEach(p => {
           p.pulse += 0.02;
           const pr = p.r * (1 + Math.sin(p.pulse) * 0.3);
           const pa = p.a * (0.7 + Math.sin(p.pulse) * 0.3);
-
           ctx.beginPath();
           ctx.fillStyle = `rgba(192,132,252,${pa})`;
           ctx.arc(p.x, p.y, pr, 0, Math.PI * 2);
@@ -1579,12 +1630,15 @@
 
           const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
           if (spd > 1.2) { p.vx *= 0.95; p.vy *= 0.95; }
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < 0) p.x = innerWidth; if (p.x > innerWidth) p.x = 0;
-          if (p.y < 0) p.y = innerHeight; if (p.y > innerHeight) p.y =  ೇ0;
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0) p.x = innerWidth;
+          if (p.x > innerWidth) p.x = 0;
+          if (p.y < 0) p.y = innerHeight;
+          if (p.y > innerHeight) p.y = 0;
         });
 
-        requestAnimationFrame(draw);
+        if (!reduce) requestAnimationFrame(draw);
       }
       draw();
     })();
