@@ -127,6 +127,15 @@
     .dots i:nth-child(2) { animation-delay: .2s; } .dots i:nth-child(3) { animation-delay: .4s; }
   }
   @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  /* Full-screen layout */
+  body { padding: 0; display: block; }
+  .card { max-width: none; width: 100%; height: 100vh; height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+  .card::before, .card::after { border-radius: 0; }
+  .chat { height: 100%; }
+  .join { height: 100%; max-width: 440px; margin: 0 auto; align-content: center; }
+  #log { padding: 18px max(16px, calc((100% - 860px) / 2)); }
+  .bar, .send, #typing, #replyBar { padding-left: max(16px, calc((100% - 860px) / 2)); padding-right: max(16px, calc((100% - 860px) / 2)); }
+  .msg { max-width: min(82%, 640px); }
 </style>
 </head>
 <body>
