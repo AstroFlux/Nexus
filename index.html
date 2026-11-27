@@ -82,7 +82,7 @@
   }
   .msg.mine { align-self: flex-end; border-radius: 14px 6px 6px 14px; background: rgba(255,107,87,.12); border-color: rgba(255,107,87,.45); border-left-width: 1px; border-right: 3px solid var(--coral); box-shadow: 0 0 18px rgba(255,107,87,.14); }
   .msg .who { font-size: .82rem; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .msg.mine .who > span:first-child { color: #ffb1a5 !important; }
+  .msg.mine .who > span.pf:not(.av) { color: #ffb1a5 !important; }
   .msg .time { font-size: .72rem; color: var(--muted); font-weight: 400; }
   .badge { color: var(--coral); border: 1px solid var(--coral); font-size: .62rem; font-weight: 700; letter-spacing: .12em; padding: 0 6px; border-radius: 3px; box-shadow: 0 0 8px rgba(255,107,87,.5); }
   .mod { margin-top: 5px; display: flex; gap: 6px; }
@@ -99,6 +99,34 @@
   @keyframes pop { from { transform: translateX(-8px) scale(.97); opacity: 0; } }
   .msg.mine { --from: 8px; }
   @keyframes pulse { 50% { box-shadow: 0 0 4px #5cf0ff, 0 0 8px var(--azure); } }
+  .av { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background-size: cover; background-position: center; font-weight: 700; flex: none; border: 1px solid var(--edge); cursor: pointer; }
+  .pf { cursor: pointer; }
+  .pplleft { display: flex; align-items: center; gap: 8px; }
+  .quote { margin: 4px 0; padding: 3px 8px; border-left: 3px solid var(--coral); background: rgba(255,255,255,.06); border-radius: 4px; font-size: .8rem; color: var(--muted); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .quote b { color: var(--text); }
+  .mod button.rep { color: var(--azure); border-color: var(--edge); }
+  .msg.flash { box-shadow: 0 0 0 2px var(--azure), 0 0 24px var(--azure); }
+  #typing { min-height: 1.5em; padding: 0 16px 3px; font-size: .8rem; color: var(--muted); }
+  .dots i { display: inline-block; width: 4px; height: 4px; margin-left: 3px; border-radius: 50%; background: var(--azure); }
+  #replyBar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 14px; border-top: 1px solid var(--edge); background: rgba(46,168,255,.08); font-size: .85rem; }
+  #replyBar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #replyBar button { padding: 0 8px; }
+  #pcard { position: fixed; z-index: 20; width: 240px; padding: 14px; background: #0a1530; border: 1px solid var(--azure); border-radius: 10px; box-shadow: 0 0 30px rgba(46,168,255,.35), 0 14px 40px rgba(0,0,0,.6); }
+  #pcard .ptop { display: flex; gap: 12px; align-items: center; }
+  #pcard p { margin: 10px 0; color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+  #pcard button { padding: 5px 12px; font-size: .85rem; }
+  dialog { background: #0a1530; color: var(--text); border: 1px solid var(--azure); border-radius: 12px; padding: 20px; width: min(92vw, 340px); box-shadow: 0 0 40px rgba(46,168,255,.35); }
+  dialog::backdrop { background: rgba(2,6,18,.7); }
+  dialog h2 { margin: 0 0 12px; font-size: 1.2rem; }
+  .pfrow { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .pfrow div { display: grid; gap: 6px; }
+  #avPrev { width: 72px; height: 72px; border-radius: 50%; background: center / cover rgba(46,168,255,.15); border: 1px solid var(--edge); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; flex: none; }
+  .dlgBtns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .dots i { animation: blink 1.2s infinite both; }
+    .dots i:nth-child(2) { animation-delay: .2s; } .dots i:nth-child(3) { animation-delay: .4s; }
+  }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -127,12 +155,15 @@
         <small><span class="dot" id="dot"></span><span id="status">Connecting…</span></small>
       </div>
       <div class="btns">
+        <button type="button" class="ghost" id="meBtn">Profile</button>
         <button type="button" class="ghost" id="peopleBtn">People</button>
         <button type="button" class="ghost" id="leave">Leave</button>
       </div>
     </div>
     <div id="people" hidden></div>
     <div id="log" aria-live="polite"></div>
+    <div id="typing" aria-live="polite"></div>
+    <div id="replyBar" hidden></div>
     <form class="send" id="sendForm" autocomplete="off">
       <input id="text" maxlength="1000" placeholder="Type a message" disabled>
       <button type="submit" id="sendBtn" disabled>Send</button>
@@ -140,6 +171,18 @@
   </section>
 
 </div>
+
+<div id="pcard" hidden></div>
+<dialog id="editProf">
+  <form id="profForm">
+    <h2>Your profile</h2>
+    <div class="pfrow"><span id="avPrev"></span>
+      <div><button type="button" id="pickImg">Choose picture</button><button type="button" class="ghost" id="clearImg">Remove picture</button></div></div>
+    <input type="file" id="imgFile" accept="image/*" hidden>
+    <label>About you<input id="bio" maxlength="80" placeholder="A short bio"></label>
+    <div class="dlgBtns"><button type="button" class="ghost" id="profCancel">Cancel</button><button type="submit">Save</button></div>
+  </form>
+</dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script>
@@ -178,6 +221,24 @@ const deleted = new Set();          // deleted message ids
 const bans = new Map();             // uid -> name
 const bannedNames = new Set();      // lowercase names
 let notes = [], renderQueued = false, saveTimer = null;
+const profiles = new Map();         // uid -> {name, bio, avatar, admin}
+const typers = new Map();           // sid -> {name, uid, until}
+let replyTo = null, lastTyping = 0, draft = null, myProfile = {};
+try { myProfile = JSON.parse(store.get('rc:profile') || '{}') || {}; } catch {}
+
+function avatarEl(uid, name, size) {
+  const p = profiles.get(uid), e = document.createElement('span');
+  e.className = 'av pf'; e.style.width = e.style.height = size + 'px'; e.style.fontSize = Math.round(size * .5) + 'px';
+  if (p && p.avatar) e.style.backgroundImage = `url(${p.avatar})`;
+  else { e.textContent = (name || '?').trim().charAt(0).toUpperCase(); e.style.background = colorFor(uid) + '33'; e.style.color = colorFor(uid); }
+  return e;
+}
+function actBtn(label, act, data, cls) {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.dataset.act = act;
+  Object.assign(b.dataset, data || {}); if (cls) b.className = cls; return b;
+}
+const cleanReply = r => (r && typeof r === 'object' && r.id)
+  ? { id: String(r.id).slice(0, 60), name: String(r.name || '').slice(0, 24), text: String(r.text || '').slice(0, 80) } : null;
 
 const isBanned = (uid, name) => bans.has(uid) || bannedNames.has(low(name));
 const NAME_COLORS = ['#5cc0ff', '#ff8f7e', '#7ae7ff', '#ffb199', '#8fa8ff', '#ffa2a2'];
@@ -203,25 +264,27 @@ function render() {
     }
     const m = it.m, mine = m.uid === myUid;
     const d = document.createElement('div'); d.className = 'msg' + (mine ? ' mine' : '');
+    d.dataset.mid = m.id; d.dataset.uid = m.uid; d.dataset.name = m.name;
     const who = document.createElement('div'); who.className = 'who';
-    const nm = document.createElement('span'); nm.style.color = colorFor(m.uid);
-    nm.textContent = mine ? 'You' : m.name; who.appendChild(nm);
+    who.appendChild(avatarEl(m.uid, m.name, 22));
+    const nm = document.createElement('span'); nm.className = 'pf'; nm.style.color = colorFor(m.uid);
+    nm.textContent = mine ? 'You' : (profiles.get(m.uid)?.name || m.name); who.appendChild(nm);
     if (m.admin) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = 'ADMIN'; who.appendChild(b); }
     const t = document.createElement('span'); t.className = 'time';
     t.textContent = new Date(m.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    who.appendChild(t);
-    const body = document.createElement('div'); body.textContent = m.text;
-    d.append(who, body);
-    if (isAdmin) {
-      const mod = document.createElement('div'); mod.className = 'mod';
-      const del = document.createElement('button'); del.type = 'button';
-      del.textContent = 'Delete'; del.dataset.act = 'del'; del.dataset.id = m.id; mod.appendChild(del);
-      if (!mine && !m.admin) {
-        const ban = document.createElement('button'); ban.type = 'button';
-        ban.textContent = 'Remove user'; ban.dataset.act = 'ban'; ban.dataset.uid = m.uid; ban.dataset.name = m.name; mod.appendChild(ban);
-      }
-      d.appendChild(mod);
+    who.appendChild(t); d.appendChild(who);
+    if (m.reply) {
+      const q = document.createElement('div'); q.className = 'quote'; q.dataset.jump = m.reply.id;
+      const qn = document.createElement('b'); qn.textContent = m.reply.name; q.append(qn, ' ' + m.reply.text); d.appendChild(q);
     }
+    const body = document.createElement('div'); body.textContent = m.text; d.appendChild(body);
+    const mod = document.createElement('div'); mod.className = 'mod';
+    mod.appendChild(actBtn('Reply', 'reply', { id: m.id }, 'rep'));
+    if (isAdmin) {
+      mod.appendChild(actBtn('Delete', 'del', { id: m.id }));
+      if (!mine && !m.admin) mod.appendChild(actBtn('Remove user', 'ban', { uid: m.uid, name: m.name }));
+    }
+    d.appendChild(mod);
     frag.appendChild(d);
   }
   log.textContent = ''; log.appendChild(frag);
@@ -231,7 +294,9 @@ function renderPeople() {
   const box = $('people'); box.textContent = '';
   const add = (name, admin, uid, you) => {
     const r = document.createElement('div'); r.className = 'row';
-    const s = document.createElement('span'); s.textContent = you ? name + ' (you)' : name; r.appendChild(s);
+    const s = document.createElement('span'); s.className = 'pf'; s.textContent = you ? name + ' (you)' : name;
+    r.dataset.uid = uid; r.dataset.name = name;
+    const left = document.createElement('span'); left.className = 'pplleft'; left.append(avatarEl(uid, name, 22), s); r.appendChild(left);
     if (admin) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = 'ADMIN'; s.append(' ', b); }
     if (isAdmin && !you && !admin) {
       const x = document.createElement('button'); x.type = 'button'; x.textContent = 'Remove user';
@@ -250,12 +315,13 @@ function updateCount() { setStatus(true, `Connected · ${users.size + 1} in room
 function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveHistory, 400); }
 function saveHistory() {
   const m = [...msgs.values()].sort((a, b) => a.ts - b.ts).slice(-MAX_SAVED);
-  store.set('rc:hist2:' + roomName, JSON.stringify({ m, d: [...deleted], b: [...bans] }));
+  store.set('rc:hist2:' + roomName, JSON.stringify({ m, d: [...deleted], b: [...bans], p: [...profiles] }));
 }
 function loadHistory() {
   try {
     const o = JSON.parse(store.get('rc:hist2:' + roomName) || '{}');
     (o.d || []).forEach(id => deleted.add(id));
+    (o.p || []).forEach(([u, p]) => profiles.set(u, p));
     (o.b || []).forEach(([u, n]) => { bans.set(u, n); bannedNames.add(low(n)); });
     (o.m || []).forEach(m => { if (!deleted.has(m.id) && !isBanned(m.uid, m.name)) msgs.set(m.id, m); });
   } catch {}
@@ -314,6 +380,7 @@ function connect() {
       if (err) { setStatus(false, 'Could not join room'); return; }
       $('text').disabled = false; $('sendBtn').disabled = false; $('text').focus();
       ctl({ t: 'join', ...me() });
+      publishProfile();
       updateCount();
     });
   });
@@ -325,16 +392,25 @@ function connect() {
 
     if (topic.startsWith(base + '/chat/')) {
       if (typeof m.text !== 'string' || !m.id) return;
-      addMsg({ id: String(m.id), uid: String(m.uid || m.id), name, text: m.text.slice(0, 1000),
+      for (const [k, v] of typers) if (v.uid === String(m.uid || m.id)) typers.delete(k);
+      addMsg({ id: String(m.id), reply: cleanReply(m.reply), uid: String(m.uid || m.id), name, text: m.text.slice(0, 1000),
                ts: Number(m.ts) || Date.now(), admin: fromAdmin(m, name) });
     } else if (topic.startsWith(base + '/del/')) {
       if (fromAdmin(m, name) && m.id) applyDelete(String(m.id));
     } else if (topic.startsWith(base + '/ban/')) {
       if (fromAdmin(m, name) && m.uid) applyBan(String(m.uid), String(m.name || ''));
+    } else if (topic.startsWith(base + '/profile/')) {
+      const uid = topic.slice((base + '/profile/').length);
+      if (!uid || uid === myUid || String(m.uid) !== uid || isBanned(uid, name)) return;
+      const av = typeof m.avatar === 'string' && m.avatar.length < 40000 && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(m.avatar) ? m.avatar : '';
+      profiles.set(uid, { name, bio: String(m.bio || '').slice(0, 80), avatar: av, admin: fromAdmin(m, name) });
+      queueRender(); renderPeople(); scheduleSave();
     } else if (topic === base + '/ctl' && m.sid !== mySid) {
       const uid = String(m.uid || m.sid);
       if (isBanned(uid, name)) return;
       const admin = fromAdmin(m, name);
+      if (m.t === 'typing') { typers.set(m.sid, { name, uid, until: Date.now() + 3500 }); renderTyping(); return; }
+      if (m.t === 'stop') { typers.delete(m.sid); renderTyping(); return; }
       if (m.t === 'join') {
         if (!users.has(m.sid)) addNote(name + ' joined');
         users.set(m.sid, { name, uid, admin }); updateCount();
@@ -342,6 +418,7 @@ function connect() {
       } else if (m.t === 'here') {
         users.set(m.sid, { name, uid, admin }); updateCount();
       } else if (m.t === 'leave') {
+        typers.delete(m.sid);
         if (users.delete(m.sid)) addNote(name + ' left');
         updateCount();
       }
@@ -367,13 +444,14 @@ function enter(name, room, pass) {
   if (admin && ADMIN_PASSCODE) store.set('rc:pass', pass);
   $('roomTitle').textContent = 'Room: ' + room;
   $('joinForm').classList.add('off'); $('chat').classList.add('on');
-  loadHistory(); renderPeople(); connect();
+  loadHistory(); publishProfile(); connect();
   return true;
 }
 function leaveRoom() {
   store.set('rc:active', '0');
   if (client) { ctl({ t: 'leave', ...me() }); client.end(true); client = null; }
   users.clear(); msgs.clear(); deleted.clear(); bans.clear(); bannedNames.clear(); notes = [];
+  profiles.clear(); typers.clear(); setReply(null); $('typing').dataset.t = ''; $('typing').textContent = '';
   $('log').textContent = ''; $('people').hidden = true;
   $('text').disabled = true; $('sendBtn').disabled = true;
   $('chat').classList.remove('on'); $('joinForm').classList.remove('off');
@@ -397,15 +475,121 @@ $('sendForm').addEventListener('submit', e => {
   if (!text || !client || !client.connected) return;
   const id = Date.now() + '-' + rnd();
   client.publish(base + '/chat/' + id,
-    JSON.stringify({ id, uid: myUid, name: myName, text, ts: Date.now(), admin: isAdmin }),
+    JSON.stringify({ id, uid: myUid, name: myName, text, ts: Date.now(), admin: isAdmin, reply: replyTo || undefined }),
     { qos: 1, retain: true });
   $('text').value = '';
+  lastTyping = 0; ctl({ t: 'stop', ...me() }); setReply(null);
 });
 function onModClick(e) {
+  const pf = e.target.closest('.pf');
+  if (pf) {
+    const h = pf.closest('[data-uid]');
+    if (h) { const r = pf.getBoundingClientRect(); showProfile(h.dataset.uid, h.dataset.name, r.left, r.bottom + 4); }
+    return;
+  }
+  const q = e.target.closest('.quote');
+  if (q) { jumpTo(q.dataset.jump); return; }
   const b = e.target.closest('button[data-act]'); if (!b) return;
   if (b.dataset.act === 'del') deleteMessage(b.dataset.id);
   else if (b.dataset.act === 'ban') banUser(b.dataset.uid, b.dataset.name);
+  else if (b.dataset.act === 'reply') {
+    const m = msgs.get(b.dataset.id);
+    if (m) setReply({ id: m.id, name: profiles.get(m.uid)?.name || m.name, text: m.text.slice(0, 80) });
+  }
 }
+function jumpTo(id) {
+  const el = $('log').querySelector('[data-mid="' + CSS.escape(id) + '"]'); if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200);
+}
+function setReply(r) {
+  replyTo = r; const bar = $('replyBar'); bar.hidden = !r; bar.textContent = '';
+  if (!r) return;
+  const t = document.createElement('span'), b = document.createElement('b'); b.textContent = r.name;
+  t.append('Replying to ', b, ': ' + r.text);
+  const x = document.createElement('button'); x.type = 'button'; x.className = 'ghost'; x.textContent = '✕';
+  x.setAttribute('aria-label', 'Cancel reply'); x.onclick = () => setReply(null);
+  bar.append(t, x); $('text').focus();
+}
+function publishProfile() {
+  const p = { uid: myUid, name: myName, bio: myProfile.bio || '', avatar: myProfile.avatar || '', admin: isAdmin };
+  profiles.set(myUid, { name: myName, bio: p.bio, avatar: p.avatar, admin: isAdmin });
+  if (client && client.connected) client.publish(base + '/profile/' + myUid, JSON.stringify(p), { qos: 1, retain: true });
+  queueRender(); renderPeople(); scheduleSave();
+}
+function showProfile(uid, fallback, x, y) {
+  const p = profiles.get(uid) || {}, name = p.name || fallback || 'Anonymous', c = $('pcard');
+  c.textContent = '';
+  const top = document.createElement('div'); top.className = 'ptop';
+  const info = document.createElement('div'), h = document.createElement('b'); h.textContent = name; info.appendChild(h);
+  if (p.admin) { const bd = document.createElement('span'); bd.className = 'badge'; bd.textContent = 'ADMIN'; info.append(' ', bd); }
+  top.append(avatarEl(uid, name, 64), info); c.appendChild(top);
+  const bio = document.createElement('p'); bio.textContent = p.bio || 'No bio yet.'; c.appendChild(bio);
+  if (uid === myUid) { const eb = actBtn('Edit profile', 'x'); eb.onclick = openEditor; c.appendChild(eb); }
+  else if (isAdmin && !p.admin) { const rb = actBtn('Remove user', 'x'); rb.onclick = () => { c.hidden = true; banUser(uid, name); }; c.appendChild(rb); }
+  c.hidden = false;
+  c.style.left = Math.max(8, Math.min(x, innerWidth - c.offsetWidth - 8)) + 'px';
+  c.style.top = Math.max(8, Math.min(y, innerHeight - c.offsetHeight - 8)) + 'px';
+}
+function renderTyping() {
+  const now = Date.now(); for (const [k, v] of typers) if (v.until < now) typers.delete(k);
+  const names = [...new Set([...typers.values()].map(v => v.name))];
+  const txt = !names.length ? '' : names.length === 1 ? names[0] + ' is typing'
+    : names.length === 2 ? names[0] + ' and ' + names[1] + ' are typing' : 'Several people are typing';
+  const el = $('typing'); if (el.dataset.t === txt) return;
+  el.dataset.t = txt; el.textContent = '';
+  if (txt) { el.append(txt + ' '); const d = document.createElement('span'); d.className = 'dots'; d.innerHTML = '<i></i><i></i><i></i>'; el.appendChild(d); }
+}
+setInterval(renderTyping, 700);
+
+/* Profile editor */
+function paintPrev() {
+  const p = $('avPrev'); p.textContent = ''; p.style.backgroundImage = draft.avatar ? `url(${draft.avatar})` : '';
+  if (!draft.avatar) p.textContent = (myName || '?').charAt(0).toUpperCase();
+}
+function openEditor() {
+  draft = { avatar: myProfile.avatar || '' }; $('bio').value = myProfile.bio || '';
+  paintPrev(); $('pcard').hidden = true; $('editProf').showModal();
+}
+$('meBtn').addEventListener('click', openEditor);
+$('pickImg').onclick = () => $('imgFile').click();
+$('clearImg').onclick = () => { draft.avatar = ''; paintPrev(); };
+$('profCancel').onclick = () => $('editProf').close();
+$('imgFile').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => {
+    const S = 96, c = document.createElement('canvas'); c.width = c.height = S;
+    const g = c.getContext('2d'), m = Math.min(img.width, img.height);
+    g.fillStyle = '#fff'; g.fillRect(0, 0, S, S);
+    g.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S);
+    draft.avatar = c.toDataURL('image/jpeg', 0.82); URL.revokeObjectURL(url); paintPrev();
+  };
+  img.onerror = () => URL.revokeObjectURL(url);
+  img.src = url;
+};
+$('profForm').addEventListener('submit', e => {
+  e.preventDefault();
+  myProfile = { avatar: draft.avatar, bio: $('bio').value.trim().slice(0, 80) };
+  store.set('rc:profile', JSON.stringify(myProfile)); $('editProf').close(); publishProfile();
+});
+
+/* Right-click anyone to see their profile */
+document.addEventListener('contextmenu', e => {
+  const h = e.target.closest('#log [data-uid], #people [data-uid]'); if (!h) return;
+  e.preventDefault(); showProfile(h.dataset.uid, h.dataset.name, e.clientX, e.clientY);
+});
+document.addEventListener('mousedown', e => { if (!e.target.closest('#pcard')) $('pcard').hidden = true; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('pcard').hidden = true; });
+
+/* Typing indicator, and remember name/room as you type */
+$('text').addEventListener('input', () => {
+  const has = $('text').value.trim(), now = Date.now();
+  if (has && now - lastTyping > 1500) { lastTyping = now; ctl({ t: 'typing', ...me() }); }
+  else if (!has && lastTyping) { lastTyping = 0; ctl({ t: 'stop', ...me() }); }
+});
+$('name').addEventListener('input', () => store.set('rc:name', $('name').value));
+$('room').addEventListener('input', () => store.set('rc:room', $('room').value));
 $('log').addEventListener('click', onModClick);
 $('people').addEventListener('click', onModClick);
 $('peopleBtn').addEventListener('click', () => { $('people').hidden = !$('people').hidden; });
