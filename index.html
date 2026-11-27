@@ -7,52 +7,47 @@
 <style>
   :root {
     --bg: #e9efec; --panel: #fbfdfc; --ink: #14222b; --muted: #5d7079;
-    --line: #cfdad5; --accent: #0f6b62; --accent-ink: #ffffff; --mine: #d6ebe6;
+    --line: #cfdad5; --accent: #0f6b62; --accent-ink: #ffffff; --mine: #d6ebe6; --danger: #b3261e;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; margin: 0; }
   body {
     background: var(--bg); color: var(--ink);
     font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     display: grid; place-items: center; padding: 16px;
   }
-  .card {
-    width: 100%; max-width: 560px; background: var(--panel);
-    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
-  }
+  .card { width: 100%; max-width: 560px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   .join { padding: 28px; display: grid; gap: 14px; }
   .join h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.01em; }
   .join p { margin: 0; color: var(--muted); }
   label { display: grid; gap: 6px; font-weight: 600; font-size: .9rem; }
-  input {
-    font: inherit; padding: 11px 12px; border: 1px solid var(--line);
-    border-radius: 8px; background: #fff; color: var(--ink); width: 100%;
-  }
+  input { font: inherit; padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); width: 100%; }
   input:focus-visible, button:focus-visible { outline: 3px solid #7cc4b9; outline-offset: 1px; }
-  button {
-    font: inherit; font-weight: 600; padding: 11px 18px; border: 0;
-    border-radius: 8px; background: var(--accent); color: var(--accent-ink); cursor: pointer;
-  }
+  button { font: inherit; font-weight: 600; padding: 11px 18px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
   button:disabled { opacity: .5; cursor: default; }
-  .err { color: #b3261e; min-height: 1.2em; font-size: .9rem; }
+  .err { color: var(--danger); min-height: 1.2em; font-size: .9rem; }
 
-  .chat { display: none; height: min(82vh, 720px); grid-template-rows: auto 1fr auto; }
+  .chat { display: none; height: min(82vh, 720px); grid-template-rows: auto auto 1fr auto; }
   .chat.on { display: grid; }
   .join.off { display: none; }
-  .bar {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 12px 16px; border-bottom: 1px solid var(--line);
-  }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
   .bar b { font-size: 1.05rem; }
   .bar small { color: var(--muted); display: block; }
+  .bar .btns { display: flex; gap: 8px; }
   .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #c58b00; margin-right: 6px; }
   .dot.ok { background: #1c9a5a; }
-  .bar button { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 7px 12px; }
+  .ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 7px 12px; }
+  #people { border-bottom: 1px solid var(--line); padding: 8px 16px; display: grid; gap: 6px; background: #f3f7f5; max-height: 160px; overflow-y: auto; }
+  #people .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   #log { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
   .msg { max-width: 82%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow-wrap: anywhere; }
   .msg.mine { align-self: flex-end; background: var(--mine); border-color: #b4d8d0; }
-  .msg .who { font-size: .8rem; font-weight: 700; }
-  .msg .time { font-size: .72rem; color: var(--muted); margin-left: 6px; font-weight: 400; }
+  .msg .who { font-size: .8rem; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .msg .time { font-size: .72rem; color: var(--muted); font-weight: 400; }
+  .badge { background: var(--ink); color: #fff; font-size: .65rem; letter-spacing: .06em; padding: 1px 6px; border-radius: 4px; }
+  .mod { margin-top: 4px; display: flex; gap: 6px; }
+  .mod button, #people button { padding: 2px 8px; font-size: .75rem; background: transparent; color: var(--danger); border: 1px solid #e3b9b5; }
   .note { align-self: center; color: var(--muted); font-size: .85rem; }
   .send { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
   @media (prefers-reduced-motion: no-preference) { .msg { animation: pop .12s ease-out; } }
@@ -68,6 +63,9 @@
     <label>Your name
       <input id="name" maxlength="24" required placeholder="e.g. Sam">
     </label>
+    <label id="passWrap" hidden>Admin passcode
+      <input id="pass" type="password">
+    </label>
     <label>Room code
       <input id="room" maxlength="40" required placeholder="e.g. blue-otter-42">
     </label>
@@ -81,8 +79,12 @@
         <b id="roomTitle"></b>
         <small><span class="dot" id="dot"></span><span id="status">Connecting…</span></small>
       </div>
-      <button type="button" id="leave">Leave</button>
+      <div class="btns">
+        <button type="button" class="ghost" id="peopleBtn">People</button>
+        <button type="button" class="ghost" id="leave">Leave</button>
+      </div>
     </div>
+    <div id="people" hidden></div>
     <div id="log" aria-live="polite"></div>
     <form class="send" id="sendForm" autocomplete="off">
       <input id="text" maxlength="1000" placeholder="Type a message" disabled>
@@ -94,80 +96,205 @@
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script>
+/* ---------- Settings ---------- */
+const ADMIN_NAME = 'Astro';   // entering this name makes you an admin
+const ADMIN_PASSCODE = '';    // optional: set a passcode here so not just anyone can type the admin name
+                              // (it is visible to anyone who views the page source)
+
 /* No API keys needed. Messages travel through free public MQTT brokers
-   (over secure WebSockets), using the room code as the topic name. */
+   (secure WebSockets). Messages, deletions and bans are stored as "retained"
+   messages under the room's topic so people who join later get them. */
 const BROKERS = [
   'wss://broker.emqx.io:8084/mqtt',
   'wss://broker.hivemq.com:8884/mqtt'
 ];
 const PREFIX = 'anon-room-chat-v1/';
+const MAX_SAVED = 500;
 
 const $ = id => document.getElementById(id);
-const myId = Math.random().toString(36).slice(2, 10);
-let client = null, topic = '', myName = '', brokerIdx = 0, everConnected = false, users = new Map();
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+const rnd = () => Math.random().toString(36).slice(2, 8);
+const low = s => String(s || '').toLowerCase();
+const isAdminName = n => low(n) === low(ADMIN_NAME);
 
-function colorFor(s) {
-  let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360;
-  return `hsl(${h} 55% 32%)`;
+let myUid = store.get('rc:uid');
+if (!myUid) { myUid = rnd() + rnd(); store.set('rc:uid', myUid); }
+const mySid = rnd();
+
+let client = null, base = '', roomName = '', myName = '', isAdmin = false, brokerIdx = 0, everConnected = false;
+const users = new Map();            // sid -> {name, uid, admin}
+const msgs = new Map();             // id -> message
+const deleted = new Set();          // deleted message ids
+const bans = new Map();             // uid -> name
+const bannedNames = new Set();      // lowercase names
+let notes = [], renderQueued = false, saveTimer = null;
+
+const isBanned = (uid, name) => bans.has(uid) || bannedNames.has(low(name));
+function colorFor(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h} 55% 32%)`; }
+
+/* ---------- Rendering ---------- */
+function queueRender() {
+  if (renderQueued) return; renderQueued = true;
+  requestAnimationFrame(() => { renderQueued = false; render(); });
 }
-function addNote(text) {
-  const d = document.createElement('div'); d.className = 'note'; d.textContent = text;
-  $('log').appendChild(d); scroll();
+function render() {
+  const log = $('log');
+  const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+  const items = [
+    ...[...msgs.values()].map(m => ({ k: 'm', ts: m.ts, m })),
+    ...notes.map(n => ({ k: 'n', ts: n.ts, n }))
+  ].sort((a, b) => a.ts - b.ts);
+  const frag = document.createDocumentFragment();
+  for (const it of items) {
+    if (it.k === 'n') {
+      const d = document.createElement('div'); d.className = 'note'; d.textContent = it.n.text;
+      frag.appendChild(d); continue;
+    }
+    const m = it.m, mine = m.uid === myUid;
+    const d = document.createElement('div'); d.className = 'msg' + (mine ? ' mine' : '');
+    const who = document.createElement('div'); who.className = 'who';
+    const nm = document.createElement('span'); nm.style.color = colorFor(m.uid);
+    nm.textContent = mine ? 'You' : m.name; who.appendChild(nm);
+    if (m.admin) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = 'ADMIN'; who.appendChild(b); }
+    const t = document.createElement('span'); t.className = 'time';
+    t.textContent = new Date(m.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    who.appendChild(t);
+    const body = document.createElement('div'); body.textContent = m.text;
+    d.append(who, body);
+    if (isAdmin) {
+      const mod = document.createElement('div'); mod.className = 'mod';
+      const del = document.createElement('button'); del.type = 'button';
+      del.textContent = 'Delete'; del.dataset.act = 'del'; del.dataset.id = m.id; mod.appendChild(del);
+      if (!mine && !m.admin) {
+        const ban = document.createElement('button'); ban.type = 'button';
+        ban.textContent = 'Remove user'; ban.dataset.act = 'ban'; ban.dataset.uid = m.uid; ban.dataset.name = m.name; mod.appendChild(ban);
+      }
+      d.appendChild(mod);
+    }
+    frag.appendChild(d);
+  }
+  log.textContent = ''; log.appendChild(frag);
+  if (nearBottom) log.scrollTop = log.scrollHeight;
 }
-function addMsg(m) {
-  const mine = m.id === myId;
-  const d = document.createElement('div'); d.className = 'msg' + (mine ? ' mine' : '');
-  const who = document.createElement('div'); who.className = 'who';
-  who.style.color = colorFor(m.id);
-  who.textContent = mine ? 'You' : m.name;
-  const t = document.createElement('span'); t.className = 'time';
-  t.textContent = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  who.appendChild(t);
-  const body = document.createElement('div'); body.textContent = m.text;
-  d.append(who, body); $('log').appendChild(d); scroll();
+function renderPeople() {
+  const box = $('people'); box.textContent = '';
+  const add = (name, admin, uid, you) => {
+    const r = document.createElement('div'); r.className = 'row';
+    const s = document.createElement('span'); s.textContent = you ? name + ' (you)' : name; r.appendChild(s);
+    if (admin) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = 'ADMIN'; s.append(' ', b); }
+    if (isAdmin && !you && !admin) {
+      const x = document.createElement('button'); x.type = 'button'; x.textContent = 'Remove user';
+      x.dataset.act = 'ban'; x.dataset.uid = uid; x.dataset.name = name; r.appendChild(x);
+    }
+    box.appendChild(r);
+  };
+  add(myName, isAdmin, myUid, true);
+  for (const u of users.values()) add(u.name, u.admin, u.uid, false);
 }
-function scroll() { const l = $('log'); l.scrollTop = l.scrollHeight; }
+function addNote(text) { notes.push({ ts: Date.now(), text }); queueRender(); }
 function setStatus(ok, text) { $('dot').classList.toggle('ok', ok); $('status').textContent = text; }
-function updateCount() {
-  setStatus(true, `Connected · ${users.size + 1} in room`);
+function updateCount() { setStatus(true, `Connected · ${users.size + 1} in room`); renderPeople(); }
+
+/* ---------- Saved copy on this device ---------- */
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveHistory, 400); }
+function saveHistory() {
+  const m = [...msgs.values()].sort((a, b) => a.ts - b.ts).slice(-MAX_SAVED);
+  store.set('rc:hist2:' + roomName, JSON.stringify({ m, d: [...deleted], b: [...bans] }));
 }
-function pub(obj) {
-  if (client && client.connected) client.publish(topic, JSON.stringify(obj), { qos: 0 });
+function loadHistory() {
+  try {
+    const o = JSON.parse(store.get('rc:hist2:' + roomName) || '{}');
+    (o.d || []).forEach(id => deleted.add(id));
+    (o.b || []).forEach(([u, n]) => { bans.set(u, n); bannedNames.add(low(n)); });
+    (o.m || []).forEach(m => { if (!deleted.has(m.id) && !isBanned(m.uid, m.name)) msgs.set(m.id, m); });
+  } catch {}
+  render(); $('log').scrollTop = $('log').scrollHeight;
 }
+
+/* ---------- Moderation ---------- */
+function addMsg(m) {
+  if (msgs.has(m.id) || deleted.has(m.id) || isBanned(m.uid, m.name)) return;
+  msgs.set(m.id, m); queueRender(); scheduleSave();
+}
+function applyDelete(id) { deleted.add(id); msgs.delete(id); queueRender(); scheduleSave(); }
+function applyBan(uid, name) {
+  bans.set(uid, name); bannedNames.add(low(name));
+  for (const [id, m] of msgs) if (isBanned(m.uid, m.name)) msgs.delete(id);
+  for (const [sid, u] of users) if (isBanned(u.uid, u.name)) users.delete(sid);
+  queueRender(); renderPeople(); scheduleSave();
+  if (!isAdmin && (uid === myUid || low(name) === low(myName))) kicked();
+}
+function kicked() {
+  store.set('rc:ban:' + roomName, '1');
+  leaveRoom();
+  $('err').textContent = 'You were removed from this room and cannot rejoin.';
+}
+function deleteMessage(id) {
+  if (!isAdmin || !client || !client.connected) return;
+  client.publish(base + '/chat/' + id, '', { qos: 1, retain: true });   // clears the stored copy
+  client.publish(base + '/del/' + id, JSON.stringify({ id, name: myName, admin: true }), { qos: 1, retain: true });
+  applyDelete(id);
+}
+function banUser(uid, name) {
+  if (!isAdmin || !client || !client.connected) return;
+  if (!confirm(`Remove ${name} from this room permanently?`)) return;
+  client.publish(base + '/ban/' + uid, JSON.stringify({ uid, name, by: myName, admin: true }), { qos: 1, retain: true });
+  applyBan(uid, name);
+}
+const fromAdmin = (m, name) => m.admin === true && isAdminName(name);
+
+/* ---------- Networking ---------- */
+function ctl(obj) {
+  if (client && client.connected) client.publish(base + '/ctl', JSON.stringify(obj), { qos: 0 });
+}
+const me = () => ({ sid: mySid, uid: myUid, name: myName, admin: isAdmin });
 
 function connect() {
   setStatus(false, 'Connecting…');
   client = mqtt.connect(BROKERS[brokerIdx], {
-    clientId: 'rc_' + myId + '_' + Math.random().toString(36).slice(2, 6),
+    clientId: 'rc_' + mySid + '_' + rnd(),
     clean: true, reconnectPeriod: 3000, connectTimeout: 7000,
-    will: { topic, payload: JSON.stringify({ t: 'leave', id: myId, name: myName }), qos: 0 }
+    will: { topic: base + '/ctl', payload: JSON.stringify({ t: 'leave', ...me() }), qos: 0 }
   });
 
   client.on('connect', () => {
     everConnected = true;
-    client.subscribe(topic, { qos: 0 }, err => {
+    client.subscribe(base + '/#', { qos: 1 }, err => {
       if (err) { setStatus(false, 'Could not join room'); return; }
       $('text').disabled = false; $('sendBtn').disabled = false; $('text').focus();
-      pub({ t: 'join', id: myId, name: myName });
+      ctl({ t: 'join', ...me() });
       updateCount();
     });
   });
 
-  client.on('message', (_, buf) => {
+  client.on('message', (topic, buf) => {
     let m; try { m = JSON.parse(buf.toString()); } catch { return; }
     if (!m || typeof m !== 'object') return;
     const name = String(m.name || 'Anonymous').slice(0, 24);
-    if (m.t === 'msg' && typeof m.text === 'string') {
-      addMsg({ id: String(m.id), name, text: m.text.slice(0, 1000), ts: Number(m.ts) || Date.now() });
-    } else if (m.id !== myId) {
+
+    if (topic.startsWith(base + '/chat/')) {
+      if (typeof m.text !== 'string' || !m.id) return;
+      addMsg({ id: String(m.id), uid: String(m.uid || m.id), name, text: m.text.slice(0, 1000),
+               ts: Number(m.ts) || Date.now(), admin: fromAdmin(m, name) });
+    } else if (topic.startsWith(base + '/del/')) {
+      if (fromAdmin(m, name) && m.id) applyDelete(String(m.id));
+    } else if (topic.startsWith(base + '/ban/')) {
+      if (fromAdmin(m, name) && m.uid) applyBan(String(m.uid), String(m.name || ''));
+    } else if (topic === base + '/ctl' && m.sid !== mySid) {
+      const uid = String(m.uid || m.sid);
+      if (isBanned(uid, name)) return;
+      const admin = fromAdmin(m, name);
       if (m.t === 'join') {
-        if (!users.has(m.id)) addNote(name + ' joined');
-        users.set(m.id, name); updateCount();
-        pub({ t: 'here', id: myId, name: myName });
+        if (!users.has(m.sid)) addNote(name + ' joined');
+        users.set(m.sid, { name, uid, admin }); updateCount();
+        ctl({ t: 'here', ...me() });
       } else if (m.t === 'here') {
-        users.set(m.id, name); updateCount();
+        users.set(m.sid, { name, uid, admin }); updateCount();
       } else if (m.t === 'leave') {
-        if (users.delete(m.id)) addNote(name + ' left');
+        if (users.delete(m.sid)) addNote(name + ' left');
         updateCount();
       }
     }
@@ -176,45 +303,75 @@ function connect() {
   client.on('reconnect', () => setStatus(false, 'Reconnecting…'));
   client.on('offline', () => setStatus(false, 'Offline'));
   client.on('error', () => {
-    if (!everConnected && brokerIdx < BROKERS.length - 1) {
-      client.end(true); brokerIdx++; connect();
-    } else if (!everConnected) {
-      setStatus(false, 'Could not reach a chat server');
-    }
+    if (!everConnected && brokerIdx < BROKERS.length - 1) { client.end(true); brokerIdx++; connect(); }
+    else if (!everConnected) setStatus(false, 'Could not reach a chat server');
   });
 }
 
+/* ---------- Entering and leaving ---------- */
+function enter(name, room, pass) {
+  const admin = isAdminName(name);
+  if (admin && ADMIN_PASSCODE && pass !== ADMIN_PASSCODE) { $('err').textContent = 'Wrong admin passcode.'; return false; }
+  if (!admin && store.get('rc:ban:' + room) === '1') { $('err').textContent = 'You were removed from this room and cannot rejoin.'; return false; }
+  $('err').textContent = '';
+  myName = name; roomName = room; base = PREFIX + room; isAdmin = admin;
+  store.set('rc:name', name); store.set('rc:room', room); store.set('rc:active', '1');
+  if (admin && ADMIN_PASSCODE) store.set('rc:pass', pass);
+  $('roomTitle').textContent = 'Room: ' + room;
+  $('joinForm').classList.add('off'); $('chat').classList.add('on');
+  loadHistory(); renderPeople(); connect();
+  return true;
+}
 function leaveRoom() {
-  if (client) { pub({ t: 'leave', id: myId, name: myName }); client.end(true); client = null; }
-  users.clear(); $('log').textContent = '';
+  store.set('rc:active', '0');
+  if (client) { ctl({ t: 'leave', ...me() }); client.end(true); client = null; }
+  users.clear(); msgs.clear(); deleted.clear(); bans.clear(); bannedNames.clear(); notes = [];
+  $('log').textContent = ''; $('people').hidden = true;
   $('text').disabled = true; $('sendBtn').disabled = true;
   $('chat').classList.remove('on'); $('joinForm').classList.remove('off');
-  everConnected = false; brokerIdx = 0;
+  everConnected = false; brokerIdx = 0; isAdmin = false;
 }
+
+/* ---------- UI events ---------- */
+function syncPassField() { $('passWrap').hidden = !(ADMIN_PASSCODE && isAdminName($('name').value.trim())); }
+$('name').addEventListener('input', syncPassField);
 
 $('joinForm').addEventListener('submit', e => {
   e.preventDefault();
-  myName = $('name').value.trim();
+  const name = $('name').value.trim();
   const room = $('room').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-');
-  if (!myName || !room) { $('err').textContent = 'Enter a name and a room code.'; return; }
-  $('err').textContent = '';
-  topic = PREFIX + room;
-  $('roomTitle').textContent = 'Room: ' + room;
-  $('joinForm').classList.add('off'); $('chat').classList.add('on');
-  addNote('Messages are live only. You will not see anything sent before you joined.');
-  connect();
+  if (!name || !room) { $('err').textContent = 'Enter a name and a room code.'; return; }
+  enter(name, room, $('pass').value);
 });
-
 $('sendForm').addEventListener('submit', e => {
   e.preventDefault();
   const text = $('text').value.trim();
-  if (!text) return;
-  pub({ t: 'msg', id: myId, name: myName, text, ts: Date.now() });
+  if (!text || !client || !client.connected) return;
+  const id = Date.now() + '-' + rnd();
+  client.publish(base + '/chat/' + id,
+    JSON.stringify({ id, uid: myUid, name: myName, text, ts: Date.now(), admin: isAdmin }),
+    { qos: 1, retain: true });
   $('text').value = '';
 });
-
+function onModClick(e) {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  if (b.dataset.act === 'del') deleteMessage(b.dataset.id);
+  else if (b.dataset.act === 'ban') banUser(b.dataset.uid, b.dataset.name);
+}
+$('log').addEventListener('click', onModClick);
+$('people').addEventListener('click', onModClick);
+$('peopleBtn').addEventListener('click', () => { $('people').hidden = !$('people').hidden; });
 $('leave').addEventListener('click', leaveRoom);
-window.addEventListener('beforeunload', () => { if (client) pub({ t: 'leave', id: myId, name: myName }); });
+window.addEventListener('beforeunload', () => { if (client) ctl({ t: 'leave', ...me() }); });
+
+/* Restore saved name and room; rejoin automatically after a refresh. */
+(function restore() {
+  const n = store.get('rc:name'), r = store.get('rc:room');
+  if (n) $('name').value = n;
+  if (r) $('room').value = r;
+  syncPassField();
+  if (n && r && store.get('rc:active') === '1') enter(n, r, store.get('rc:pass') || '');
+})();
 </script>
 </body>
 </html>
